@@ -47,7 +47,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 14px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    padding: 10px 6px calc(16px + env(safe-area-inset-bottom, 0px));
     border-radius: 0;
     background: linear-gradient(160deg, var(--body-hi), var(--body) 45%, var(--body-lo));
     box-shadow:
@@ -56,13 +56,13 @@
       0 24px 48px rgba(0, 0, 0, .55);
   }
   /* everything above the keys: takes all spare height, screen centred in it */
+  /* everything above the keys; the screen glass takes all spare height */
   .upper {
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 12px;
+    gap: 8px;
   }
   .speaker {
     align-self: center;
@@ -81,21 +81,28 @@
     opacity: .85;
   }
   .bezel {
+    flex: 1;
+    min-height: 120px;
+    display: flex;
     background: var(--bezel);
-    border-radius: 20px 20px 28px 28px;
-    padding: 8px;
+    border-radius: 18px 18px 24px 24px;
+    padding: 5px;
     box-shadow: inset 0 2px 6px rgba(0, 0, 0, .6);
   }
   .lcd {
+    flex: 1;
+    position: relative;
     border-radius: 6px;
     background: radial-gradient(ellipse at 40% 30%, var(--lcd-hi), var(--lcd) 70%);
     box-shadow: inset 0 0 12px rgba(0, 0, 0, .3);
     overflow: hidden;
   }
   canvas {
+    position: absolute;
+    inset: 0;
     display: block;
     width: 100%;
-    aspect-ratio: 84 / 48;
+    height: 100%;
     touch-action: none;
   }
   .navi {
@@ -217,27 +224,31 @@
     BLUE:  { bg: '#8DBBDD', hi: '#A8CEEB', ink: '#0D2136', ghost: 'rgba(13,33,54,0.08)' },
   };
   let theme = THEMES.GREEN;
-  let ghost = null, P = 1, PS = 1, OX = 0, OY = 0;
+  let ghost = null, P = 1, PY = 1, PS = 1, PSY = 1, OX = 0, OY = 0;
 
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
     const r = canvas.getBoundingClientRect();
     canvas.width = Math.max(84, Math.round(r.width * dpr));
     canvas.height = Math.max(48, Math.round(r.height * dpr));
-    // pixel pitch fills the whole screen; each LCD dot keeps a small gap when there is room
+    // The picture fills the glass: full width, and dots may grow up to 1.5x taller
+    // than wide so a tall phone screen is used too. Dots keep a small gap when there is room.
     P = Math.min(canvas.width / LW, canvas.height / LH);
+    PY = Math.min(canvas.height / LH, P * 1.5);
     PS = P >= 5 ? P * 0.88 : P;
+    PSY = P >= 5 ? PY - P * 0.12 : PY;
     OX = (canvas.width - P * LW) / 2;
-    OY = (canvas.height - P * LH) / 2;
+    OY = (canvas.height - PY * LH) / 2;
     ghost = document.createElement('canvas');
     ghost.width = canvas.width; ghost.height = canvas.height;
     const g = ghost.getContext('2d');
     g.fillStyle = theme.ghost;
-    for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++) dot(g, x, y);
+    const mx = Math.ceil(OX / P), my = Math.ceil(OY / PY);
+    for (let y = -my; y < LH + my; y++) for (let x = -mx; x < LW + mx; x++) dot(g, x, y);
   }
   function dot(c, x, y) {
-    const x0 = Math.round(OX + x * P), y0 = Math.round(OY + y * P);
-    c.fillRect(x0, y0, Math.max(1, Math.round(OX + x * P + PS) - x0), Math.max(1, Math.round(OY + y * P + PS) - y0));
+    const x0 = Math.round(OX + x * P), y0 = Math.round(OY + y * PY);
+    c.fillRect(x0, y0, Math.max(1, Math.round(OX + x * P + PS) - x0), Math.max(1, Math.round(OY + y * PY + PSY) - y0));
   }
   function applyTheme(name) {
     theme = THEMES[name] || THEMES.GREEN;
@@ -1406,8 +1417,8 @@
 
   // swipe outside the keys = arrows; tap on the screen = OK or a direct pick
   const lcdXY = e => {
-    const r = canvas.getBoundingClientRect();
-    return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH];
+    const r = canvas.getBoundingClientRect(), k = canvas.width / r.width;
+    return [((e.clientX - r.left) * k - OX) / P, ((e.clientY - r.top) * k - OY) / PY];
   };
   let sw = null;
   document.addEventListener('pointerdown', e => {
