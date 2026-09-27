@@ -43,14 +43,13 @@
   }
   .phone {
     width: 100%;
-    max-width: 380px;
-    height: 100%;
-    max-height: 820px;
+    max-width: 420px;
+    max-height: 100%;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 16px 16px 22px;
+    padding: 14px 10px 22px;
     border-radius: 48px 48px 72px 72px / 40px 40px 90px 90px;
     background: linear-gradient(160deg, var(--body-hi), var(--body) 45%, var(--body-lo));
     box-shadow:
@@ -69,7 +68,7 @@
   .bezel {
     background: var(--bezel);
     border-radius: 20px 20px 28px 28px;
-    padding: 12px;
+    padding: 8px;
     box-shadow: inset 0 2px 6px rgba(0, 0, 0, .6);
   }
   .lcd {
@@ -92,12 +91,11 @@
     flex: none;
   }
   .keypad {
-    flex: 1;
-    min-height: 0;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(4, minmax(38px, 1fr));
-    gap: 10px 16px;
+    grid-template-rows: repeat(4, clamp(34px, 7vh, 52px));
+    gap: 10px 18px;
+    padding-inline: 6px;
   }
   button {
     font-family: var(--ui);
@@ -117,8 +115,8 @@
     box-shadow: 0 3px 0 #7C879B, 0 5px 8px rgba(0, 0, 0, .35);
     transition: transform .05s, box-shadow .05s, filter .05s;
   }
-  .key b { font-size: 22px; font-weight: 700; line-height: 1; }
-  .key small { font-size: 11px; font-weight: 500; letter-spacing: .04em; opacity: .7; }
+  .key b { font-size: 19px; font-weight: 700; line-height: 1; }
+  .key small { font-size: 10px; font-weight: 500; letter-spacing: .04em; opacity: .7; }
   .key.down, .key:active {
     transform: translateY(2px);
     box-shadow: 0 1px 0 #7C879B, 0 2px 4px rgba(0, 0, 0, .35);
@@ -141,7 +139,7 @@
     .brand { display: none; }
     .phone { gap: 10px; padding-top: 12px; }
     .navi { height: 46px; }
-    .key b { font-size: 18px; }
+    .key b { font-size: 17px; }
   }
 </style>
 
@@ -149,14 +147,14 @@
   <div class="phone">
     <div class="brand">LALEFON</div>
     <div class="bezel">
-      <div class="lcd" id="lcdBox"><canvas id="lcd" aria-label="Ekran telefona"></canvas></div>
+      <div class="lcd" id="lcdBox"><canvas id="lcd" aria-label="Phone screen"></canvas></div>
     </div>
     <div class="navi">
-      <button class="key c" data-k="c" aria-label="C, nazad (drzi za izlaz)"><b>C</b></button>
-      <button class="key ok" data-k="ok" aria-label="Navi taster">OK</button>
+      <button class="key c" data-k="c" aria-label="C, back (hold to exit)"><b>C</b></button>
+      <button class="key ok" data-k="ok" aria-label="Navi key">OK</button>
       <div class="rocker">
-        <button class="key" data-k="up" aria-label="Gore">▲</button>
-        <button class="key" data-k="down" aria-label="Dole">▼</button>
+        <button class="key" data-k="up" aria-label="Up">▲</button>
+        <button class="key" data-k="down" aria-label="Down">▼</button>
       </div>
     </div>
     <div class="keypad">
@@ -187,11 +185,11 @@
   const lcdBox = document.getElementById('lcdBox');
   const ctx = canvas.getContext('2d');
   const THEMES = {
-    ZELENI: { bg: '#AFC48A', hi: '#C3D59C', ink: '#1F2A16', ghost: 'rgba(31,42,22,0.07)' },
-    SIVI:   { bg: '#B7BCB2', hi: '#CBCFC6', ink: '#1C1E1A', ghost: 'rgba(28,30,26,0.07)' },
-    PLAVI:  { bg: '#8DBBDD', hi: '#A8CEEB', ink: '#0D2136', ghost: 'rgba(13,33,54,0.08)' },
+    GREEN: { bg: '#AFC48A', hi: '#C3D59C', ink: '#1F2A16', ghost: 'rgba(31,42,22,0.07)' },
+    GREY:  { bg: '#B7BCB2', hi: '#CBCFC6', ink: '#1C1E1A', ghost: 'rgba(28,30,26,0.07)' },
+    BLUE:  { bg: '#8DBBDD', hi: '#A8CEEB', ink: '#0D2136', ghost: 'rgba(13,33,54,0.08)' },
   };
-  let theme = THEMES.ZELENI;
+  let theme = THEMES.GREEN;
   let ghost = null, P = 1, PS = 1, OX = 0, OY = 0;
 
   function resize() {
@@ -199,18 +197,23 @@
     const r = canvas.getBoundingClientRect();
     canvas.width = Math.max(84, Math.round(r.width * dpr));
     canvas.height = Math.max(48, Math.round(r.height * dpr));
-    P = Math.max(1, Math.floor(Math.min(canvas.width / LW, canvas.height / LH)));
-    PS = P > 3 ? P - Math.max(1, Math.round(P * 0.12)) : P;
-    OX = Math.floor((canvas.width - P * LW) / 2);
-    OY = Math.floor((canvas.height - P * LH) / 2);
+    // pixel pitch fills the whole screen; each LCD dot keeps a small gap when there is room
+    P = Math.min(canvas.width / LW, canvas.height / LH);
+    PS = P >= 5 ? P * 0.88 : P;
+    OX = (canvas.width - P * LW) / 2;
+    OY = (canvas.height - P * LH) / 2;
     ghost = document.createElement('canvas');
     ghost.width = canvas.width; ghost.height = canvas.height;
     const g = ghost.getContext('2d');
     g.fillStyle = theme.ghost;
-    for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++) g.fillRect(OX + x * P, OY + y * P, PS, PS);
+    for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++) dot(g, x, y);
+  }
+  function dot(c, x, y) {
+    const x0 = Math.round(OX + x * P), y0 = Math.round(OY + y * P);
+    c.fillRect(x0, y0, Math.max(1, Math.round(OX + x * P + PS) - x0), Math.max(1, Math.round(OY + y * P + PS) - y0));
   }
   function applyTheme(name) {
-    theme = THEMES[name] || THEMES.ZELENI;
+    theme = THEMES[name] || THEMES.GREEN;
     lcdBox.style.setProperty('--lcd', theme.bg);
     lcdBox.style.setProperty('--lcd-hi', theme.hi);
     resize();
@@ -221,7 +224,7 @@
     ctx.fillStyle = theme.ink;
     for (let y = 0; y < LH; y++) {
       const row = y * LW;
-      for (let x = 0; x < LW; x++) if (fb[row + x]) ctx.fillRect(OX + x * P, OY + y * P, PS, PS);
+      for (let x = 0; x < LW; x++) if (fb[row + x]) dot(ctx, x, y);
     }
   }
 
@@ -295,15 +298,15 @@
   // ======================================================================
   const STORE = 'lalefon-v1';
   const DEFAULT_MELODIES = [
-    { name: 'MOJA 1', tempo: 125, notes: '' },
-    { name: 'MOJA 2', tempo: 125, notes: '' },
-    { name: 'MOJA 3', tempo: 125, notes: '' },
-    { name: 'TETRIS', tempo: 160, notes: '4e2 8h1 8c2 4d2 8c2 8h1 4a1 8a1 8c2 4e2 8d2 8c2 4h1 8h1 8c2 4d2 4e2 4c2 4a1 4a1 4- 4d2 8f2 4a2 8g2 8f2 4e2 8c2 4e2 8d2 8c2 4h1 8h1 8c2 4d2 4e2 4c2 4a1 4a1' },
-    { name: 'ODA RADOSTI', tempo: 125, notes: '4e1 4e1 4f1 4g1 4g1 4f1 4e1 4d1 4c1 4c1 4d1 4e1 4e1 8d1 2d1 4e1 4e1 4f1 4g1 4g1 4f1 4e1 4d1 4c1 4c1 4d1 4e1 4d1 8c1 2c1' },
-    { name: 'GRAN VALS', tempo: 180, notes: '8e2 8d2 4#f1 4#g1 8#c2 8h1 4d1 4e1 8h1 8a1 4#c1 4e1 2a1' },
+    { name: 'MY TUNE 1', tempo: 125, notes: '' },
+    { name: 'MY TUNE 2', tempo: 125, notes: '' },
+    { name: 'MY TUNE 3', tempo: 125, notes: '' },
+    { name: 'TETRIS', tempo: 160, notes: '4e2 8b1 8c2 4d2 8c2 8b1 4a1 8a1 8c2 4e2 8d2 8c2 4b1 8b1 8c2 4d2 4e2 4c2 4a1 4a1 4- 4d2 8f2 4a2 8g2 8f2 4e2 8c2 4e2 8d2 8c2 4b1 8b1 8c2 4d2 4e2 4c2 4a1 4a1' },
+    { name: 'ODE TO JOY', tempo: 125, notes: '4e1 4e1 4f1 4g1 4g1 4f1 4e1 4d1 4c1 4c1 4d1 4e1 4e1 8d1 2d1 4e1 4e1 4f1 4g1 4g1 4f1 4e1 4d1 4c1 4c1 4d1 4e1 4d1 8c1 2c1' },
+    { name: 'GRAND WALTZ', tempo: 180, notes: '8e2 8d2 4#f1 4#g1 8#c2 8b1 4d1 4e1 8b1 8a1 4#c1 4e1 2a1' },
   ];
   let S = {
-    keyTone: true, vibra: true, screen: 'ZELENI',
+    keyTone: true, vibra: true, screen: 'GREEN',
     snake: { level: 3, maze: 0, best: 0 },
     space: { best: 0 }, pairs: { best: 0 }, mancala: { wins: 0, losses: 0 },
     mel: DEFAULT_MELODIES.map(m => ({ ...m })),
@@ -312,6 +315,8 @@
     const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (saved) S = { ...S, ...saved, snake: { ...S.snake, ...saved.snake } };
     if (!Array.isArray(S.mel) || S.mel.length !== DEFAULT_MELODIES.length) S.mel = DEFAULT_MELODIES.map(m => ({ ...m }));
+    S.mel.forEach((m, i) => { m.name = DEFAULT_MELODIES[i].name; });
+    S.screen = { ZELENI: 'GREEN', SIVI: 'GREY', PLAVI: 'BLUE' }[S.screen] || S.screen;
   } catch (e) {}
   function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
 
@@ -405,7 +410,7 @@
           text(label(it), 2, y, 1, sel ? 0 : 1);
           if (it.value) { const v = String(it.value()); text(v, LW - 2 - textW(v), y, 1, sel ? 0 : 1); }
         }
-        soft(opts.soft || 'IZABERI');
+        soft(opts.soft || 'SELECT');
       },
     };
   }
@@ -429,7 +434,7 @@
           const y = 8 + Math.round((34 - h) * first / (lines.length - ROWS));
           rect(83, y, 1, h);
         }
-        soft('NAZAD');
+        soft('BACK');
       },
     };
   }
@@ -454,7 +459,7 @@
         const hh = pad(d.getHours(), 2), mm = pad(d.getMinutes(), 2);
         center(hh + (d.getSeconds() % 2 ? ':' : ' ') + mm, 16, 2);
         center(`${pad(d.getDate(), 2)}.${pad(d.getMonth() + 1, 2)}.${d.getFullYear()}`, 31);
-        soft('MENI');
+        soft('MENU');
       },
     };
   }
@@ -490,10 +495,10 @@
   };
   function MainMenu() {
     const items = [
-      { name: 'IGRE', icon: ICONS.igre, open: GamesMenu },
-      { name: 'KOMPOZITOR', icon: ICONS.note, open: ComposerMenu },
-      { name: 'DODACI', icon: ICONS.calc, open: ExtrasMenu },
-      { name: 'PODESAVANJA', icon: ICONS.settings, open: SettingsMenu },
+      { name: 'GAMES', icon: ICONS.igre, open: GamesMenu },
+      { name: 'COMPOSER', icon: ICONS.note, open: ComposerMenu },
+      { name: 'EXTRAS', icon: ICONS.calc, open: ExtrasMenu },
+      { name: 'SETTINGS', icon: ICONS.settings, open: SettingsMenu },
     ];
     let idx = 0;
     return {
@@ -513,49 +518,49 @@
         // scroll bar on the right edge
         rect(82, 8, 1, 32);
         rect(81, 8 + idx * 8, 3, 8);
-        soft('IZABERI');
+        soft('SELECT');
       },
     };
   }
 
   function GamesMenu() {
-    return List('IGRE', [
-      { label: 'ZMIJICA', ok: () => push(SnakeMenu()) },
-      { label: 'SVEMIRSKI NAPAD', ok: () => push(SpaceMenu()) },
-      { label: 'PAROVI', ok: () => push(PairsMenu()) },
-      { label: 'MANKALA', ok: () => push(MancalaMenu()) },
+    return List('GAMES', [
+      { label: 'SNAKE', ok: () => push(SnakeMenu()) },
+      { label: 'SPACE ATTACK', ok: () => push(SpaceMenu()) },
+      { label: 'PAIRS', ok: () => push(PairsMenu()) },
+      { label: 'MANCALA', ok: () => push(MancalaMenu()) },
     ]);
   }
   function ExtrasMenu() {
-    return List('DODACI', [
-      { label: 'KALKULATOR', ok: () => push(Calculator()) },
-      { label: 'STOPERICA', ok: () => push(Stopwatch()) },
+    return List('EXTRAS', [
+      { label: 'CALCULATOR', ok: () => push(Calculator()) },
+      { label: 'STOPWATCH', ok: () => push(Stopwatch()) },
     ]);
   }
   function SettingsMenu() {
     const names = Object.keys(THEMES);
-    return List('PODESAVANJA', [
-      { label: 'ZVUK TASTERA', value: () => S.keyTone ? 'DA' : 'NE', adj: () => { S.keyTone = !S.keyTone; } },
-      { label: 'VIBRACIJA', value: () => S.vibra ? 'DA' : 'NE', adj: () => { S.vibra = !S.vibra; buzz(80); } },
-      { label: 'EKRAN', value: () => S.screen, adj: d => {
+    return List('SETTINGS', [
+      { label: 'KEY TONES', value: () => S.keyTone ? 'ON' : 'OFF', adj: () => { S.keyTone = !S.keyTone; } },
+      { label: 'VIBRATION', value: () => S.vibra ? 'ON' : 'OFF', adj: () => { S.vibra = !S.vibra; buzz(80); } },
+      { label: 'SCREEN', value: () => S.screen, adj: d => {
         S.screen = names[(names.indexOf(S.screen) + d + names.length) % names.length];
         applyTheme(S.screen);
       } },
-    ], { soft: 'PROMENI' });
+    ], { soft: 'CHANGE' });
   }
 
   // ======================================================================
   //  ZMIJICA (snake)
   // ======================================================================
-  const MAZES = ['NEMA', 'KUTIJA', 'TUNEL'];
+  const MAZES = ['NONE', 'BOX', 'TUNNEL'];
   function SnakeMenu() {
-    return List('ZMIJICA', [
-      { label: 'NOVA IGRA', ok: () => push(SnakeGame()) },
-      { label: 'NIVO', value: () => S.snake.level, adj: d => { S.snake.level = ((S.snake.level - 1 + d + 9) % 9) + 1; } },
-      { label: 'LAVIRINT', value: () => MAZES[S.snake.maze], adj: d => { S.snake.maze = (S.snake.maze + d + 3) % 3; } },
-      { label: 'REKORD', value: () => S.snake.best },
-      { label: 'UPUTSTVO', ok: () => push(TextView('UPUTSTVO',
-        'Vodi zmijicu tasterima 2 4 6 8 ili prevlacenjem prsta po ekranu. Jedi tackice da rastes. Posle svake pete pojavi se bonus zivotinja: uhvati je pre isteka vremena. Ne udaraj u sebe. Nivo odredjuje brzinu. 5 ili OK je pauza.')) },
+    return List('SNAKE', [
+      { label: 'NEW GAME', ok: () => push(SnakeGame()) },
+      { label: 'LEVEL', value: () => S.snake.level, adj: d => { S.snake.level = ((S.snake.level - 1 + d + 9) % 9) + 1; } },
+      { label: 'MAZE', value: () => MAZES[S.snake.maze], adj: d => { S.snake.maze = (S.snake.maze + d + 3) % 3; } },
+      { label: 'TOP SCORE', value: () => S.snake.best },
+      { label: 'INSTRUCTIONS', ok: () => push(TextView('INSTRUCTIONS',
+        'Steer the snake with keys 2 4 6 8 or by swiping on the screen. Eat the dots to grow. After every fifth dot a bonus creature appears: catch it before its timer runs out. Do not bite yourself. The level sets the speed. 5 or OK pauses.')) },
     ]);
   }
 
@@ -692,15 +697,15 @@
       hidden() { if (state === 'play') state = 'paused'; },
       draw() {
         if (state === 'over') {
-          center('KRAJ IGRE!', 1);
-          center('REZULTAT:', 10);
+          center('GAME OVER!', 1);
+          center('YOUR SCORE:', 10);
           center(String(score), 17, 2);
-          center(newBest ? 'NOVI REKORD!' : 'REKORD ' + S.snake.best, 30);
-          center('5 = NOVA  C = NAZAD', 41);
+          center(newBest ? 'NEW TOP SCORE!' : 'TOP SCORE ' + S.snake.best, 30);
+          center('5 = NEW  C = BACK', 41);
           return;
         }
         drawField(state !== 'dying' || Math.floor(dieT * 6) % 2 === 0);
-        if (state === 'paused') box(['PAUZA', '5 = NASTAVI', 'C = IZLAZ']);
+        if (state === 'paused') box(['PAUSED', '5 = CONTINUE', 'C = EXIT']);
       },
     };
   }
@@ -709,11 +714,11 @@
   //  SVEMIRSKI NAPAD (side-scrolling shooter)
   // ======================================================================
   function SpaceMenu() {
-    return List('SVEMIRSKI NAPAD', [
-      { label: 'NOVA IGRA', ok: () => push(SpaceGame()) },
-      { label: 'REKORD', value: () => S.space.best },
-      { label: 'UPUTSTVO', ok: () => push(TextView('UPUTSTVO',
-        'Pomeraj brod tasterima 2 4 6 8 ili vuci prstom preko ekrana. Drzi 5 ili OK za pucanje. Dok vuces prstom, brod puca sam. Kutija daje trostruku vatru. Na kraju svakog nivoa ceka te veliki bos. Imas 3 zivota. C je pauza.')) },
+    return List('SPACE ATTACK', [
+      { label: 'NEW GAME', ok: () => push(SpaceGame()) },
+      { label: 'TOP SCORE', value: () => S.space.best },
+      { label: 'INSTRUCTIONS', ok: () => push(TextView('INSTRUCTIONS',
+        'Move the ship with keys 2 4 6 8 or drag your finger across the screen. Hold 5 or OK to fire. While you drag, the ship fires on its own. A box gives you triple fire. A big boss waits at the end of every level. You have 3 lives. C pauses.')) },
     ]);
   }
 
@@ -892,11 +897,11 @@
       tick(dt) { if (!st.paused) update(dt); },
       draw(t) {
         if (st.phase === 'over') {
-          center('KRAJ IGRE!', 1);
-          center('REZULTAT:', 10);
+          center('GAME OVER!', 1);
+          center('YOUR SCORE:', 10);
           center(String(st.score), 17, 2);
-          center(st.newBest ? 'NOVI REKORD!' : 'REKORD ' + S.space.best, 30);
-          center('5 = NOVA  C = NAZAD', 41);
+          center(st.newBest ? 'NEW TOP SCORE!' : 'TOP SCORE ' + S.space.best, 30);
+          center('5 = NEW  C = BACK', 41);
           return;
         }
         for (let i = 0; i < st.lives; i++) spr(['101', '111', '010'], 1 + i * 4, 1);
@@ -917,8 +922,8 @@
         }
         const blink = st.inv > 0 && Math.floor(st.inv * 10) % 2;
         if (st.phase !== 'dying' && !blink) spr(SHIP, st.ship.x, st.ship.y);
-        if (st.phase === 'intro') box(['NIVO ' + st.level]);
-        if (st.paused) box(['PAUZA', '5 = NASTAVI', 'C = IZLAZ']);
+        if (st.phase === 'intro') box(['LEVEL ' + st.level]);
+        if (st.paused) box(['PAUSED', '5 = CONTINUE', 'C = EXIT']);
       },
     };
   }
@@ -938,11 +943,11 @@
     ['00011000', '00111100', '01111110', '11111111', '01000010', '01011010', '01011010', '01111110'],
   ];
   function PairsMenu() {
-    return List('PAROVI', [
-      { label: 'NOVA IGRA', ok: () => push(PairsGame()) },
-      { label: 'REKORD', value: () => S.pairs.best ? S.pairs.best + ' POTEZA' : '-' },
-      { label: 'UPUTSTVO', ok: () => push(TextView('UPUTSTVO',
-        'Pronadji sve parove slicica. Pomeraj okvir tasterima 2 4 6 8 i otvaraj karte sa 5 ili OK, ili samo tapni kartu na ekranu. Sto manje poteza, to bolje.')) },
+    return List('PAIRS', [
+      { label: 'NEW GAME', ok: () => push(PairsGame()) },
+      { label: 'TOP SCORE', value: () => S.pairs.best ? S.pairs.best + ' MOVES' : '-' },
+      { label: 'INSTRUCTIONS', ok: () => push(TextView('INSTRUCTIONS',
+        'Find all the matching pairs. Move the frame with keys 2 4 6 8 and turn cards with 5 or OK, or just tap a card on the screen. The fewer moves, the better.')) },
     ]);
   }
   function PairsGame() {
@@ -996,7 +1001,7 @@
         if (lock > 0) { lock -= dt; if (lock <= 0) { open.forEach(i => { cards[i].st = 'down'; }); open = []; } }
       },
       draw(t) {
-        text('POTEZI ' + moves, 1, 0);
+        text('MOVES ' + moves, 1, 0);
         right(cards.filter(c => c.st === 'done').length / 2 + '/9', 0);
         cards.forEach((c, i) => {
           const { x, y } = pos(i);
@@ -1009,7 +1014,7 @@
           }
         });
         if (!won && Math.floor(t * 3) % 2 === 0) { const { x, y } = pos(cur); frame(x - 1, y - 1, 14, 14); }
-        if (won) box(['BRAVO!', moves + ' POTEZA', newBest ? 'NOVI REKORD!' : 'REKORD ' + S.pairs.best]);
+        if (won) box(['WELL DONE!', moves + ' MOVES', newBest ? 'NEW TOP SCORE!' : 'TOP SCORE ' + S.pairs.best]);
       },
     };
   }
@@ -1018,11 +1023,11 @@
   //  MANKALA (6 pits a side, 4 stones each, you against the phone)
   // ======================================================================
   function MancalaMenu() {
-    return List('MANKALA', [
-      { label: 'NOVA IGRA', ok: () => push(MancalaGame()) },
-      { label: 'POBEDE', value: () => S.mancala.wins + ':' + S.mancala.losses },
-      { label: 'UPUTSTVO', ok: () => push(TextView('UPUTSTVO',
-        'Ti si dole, telefon gore. Izaberi rupicu tasterima 4 i 6 (ili je tapni) i pritisni 5. Kamencici se dele jedan po jedan, u smeru suprotnom od kazaljke na satu. Ako poslednji padne u tvoju kucicu desno, igras ponovo. Ako padne u tvoju praznu rupicu, uzimas i sve kamencice preko puta. Kad se jedna strana isprazni, igra je gotova. Pobedjuje ko ima vise u kucici.')) },
+    return List('MANCALA', [
+      { label: 'NEW GAME', ok: () => push(MancalaGame()) },
+      { label: 'WINS:LOSSES', value: () => S.mancala.wins + ':' + S.mancala.losses },
+      { label: 'INSTRUCTIONS', ok: () => push(TextView('INSTRUCTIONS',
+        'You play the bottom row, the phone plays the top. Pick a pit with 4 and 6 (or tap it) and press 5. The stones are sown one by one, counterclockwise. If your last stone lands in your store on the right, you go again. If it lands in an empty pit on your side, you also take all the stones across from it. When one side is empty the game ends. Whoever has more stones in their store wins.')) },
     ]);
   }
   function MancalaGame() {
@@ -1064,7 +1069,7 @@
       if (finishIfDone(board)) {
         show = board.slice(); over = true;
         const me = board[6], cpu = board[13];
-        result = me > cpu ? 'POBEDA!' : me < cpu ? 'PORAZ' : 'NERESENO';
+        result = me > cpu ? 'YOU WIN!' : me < cpu ? 'YOU LOSE' : 'DRAW';
         if (me > cpu) { S.mancala.wins++; [1320, 1760, 2200].forEach((f, i) => sfx(f, 0.08, i * 0.1)); }
         else if (me < cpu) { S.mancala.losses++; sfx(300, 0.3); }
         save();
@@ -1072,7 +1077,7 @@
       }
       show = board.slice();
       turn = res.extra ? who : 1 - who;
-      msg = res.extra ? (who === 0 ? 'IGRAS PONOVO!' : 'TELEFON OPET') : '';
+      msg = res.extra ? (who === 0 ? 'GO AGAIN!' : 'PHONE AGAIN') : '';
       if (turn === 1) cpuWait = 0.9;
       else if (board[cur] === 0) moveCur(1);
     }
@@ -1125,7 +1130,7 @@
         }
       },
       draw() {
-        center('MANKALA', 0);
+        center('MANCALA', 0);
         rect(0, 6, LW, 1);
         // stores: phone on the left, you on the right
         frame(1, 11, 11, 30); num(show[13], 1, 23, 11);
@@ -1137,7 +1142,7 @@
           if (sel) rect(x, 29, 11, 12); else frame(x, 29, 11, 12);
           num(show[col], x, 32, 11, sel ? 0 : 1);
         }
-        const status = over ? `${result} ${board[6]}:${board[13]}` : anim ? '' : msg || (turn === 0 ? 'TVOJ RED' : 'TELEFON RAZMISLJA');
+        const status = over ? `${result} ${board[6]}:${board[13]}` : anim ? '' : msg || (turn === 0 ? 'YOUR TURN' : 'PHONE THINKING');
         center(status, 43);
       },
     };
@@ -1146,23 +1151,23 @@
   // ======================================================================
   //  KOMPOZITOR (ringtone composer)
   // ======================================================================
-  const NOTE_KEYS = { 1: 'c', 2: 'd', 3: 'e', 4: 'f', 5: 'g', 6: 'a', 7: 'h' };
-  const SEMI = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, h: 11 };
+  const NOTE_KEYS = { 1: 'c', 2: 'd', 3: 'e', 4: 'f', 5: 'g', 6: 'a', 7: 'b' };
+  const SEMI = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
   const TEMPOS = [63, 80, 100, 125, 160, 180, 200, 250];
   const tok = n => n.n === '-' ? `${n.d}-` : `${n.d}${n.s ? '#' : ''}${n.n}${n.o}`;
   function parseNotes(str) {
     return str.trim().split(/\s+/).filter(Boolean).map(t => {
       const m = /^(\d+)(#?)([a-h-])(\d?)$/i.exec(t);
-      return m ? { d: +m[1], s: !!m[2], n: m[3].toLowerCase(), o: +m[4] || 1 } : null;
+      return m ? { d: +m[1], s: !!m[2], n: m[3].toLowerCase().replace('h', 'b'), o: +m[4] || 1 } : null;
     }).filter(Boolean);
   }
   const freqOf = n => 523.25 * Math.pow(2, (n.o - 1) + (SEMI[n.n] + (n.s ? 1 : 0)) / 12);
 
   function ComposerMenu() {
     const items = S.mel.map((m, i) => ({ label: m.name, value: () => parseNotes(S.mel[i].notes).length || '', ok: () => push(Editor(i)) }));
-    items.push({ label: 'UPUTSTVO', ok: () => push(TextView('UPUTSTVO',
-      'Tasteri 1 do 7 su note do re mi fa sol la si (C D E F G A H). 0 je pauza. 8 skracuje, a 9 produzava poslednju notu. * menja oktavu, # dodaje povisilicu. C brise notu, a drzanje C izlazi. Strelice pomeraju kursor. OK otvara opcije: sviraj, tempo, brisanje. Najvise 50 nota.')) });
-    return List('KOMPOZITOR', items);
+    items.push({ label: 'INSTRUCTIONS', ok: () => push(TextView('INSTRUCTIONS',
+      'Keys 1 to 7 are the notes C D E F G A B. 0 is a rest. 8 makes the last note shorter and 9 makes it longer. * changes the octave and # adds a sharp. C deletes a note and holding C exits. The arrows move the cursor. OK opens the options: play, tempo, clear. Up to 50 notes.')) });
+    return List('COMPOSER', items);
   }
 
   function Editor(slot) {
@@ -1201,14 +1206,14 @@
       return pos;
     }
     function options() {
-      push(List('OPCIJE', [
-        { label: 'SVIRAJ', ok: () => { pop(); play(); } },
+      push(List('OPTIONS', [
+        { label: 'PLAY', ok: () => { pop(); play(); } },
         { label: 'TEMPO', value: () => m.tempo, adj: d => {
           const i = TEMPOS.indexOf(m.tempo);
           m.tempo = TEMPOS[((i < 0 ? 3 : i) + d + TEMPOS.length) % TEMPOS.length];
         } },
-        { label: 'OBRISI SVE', ok: () => { notes = []; cur = 0; persist(); pop(); } },
-        { label: 'IZADJI', ok: () => { pop(); pop(); } },
+        { label: 'CLEAR ALL', ok: () => { notes = []; cur = 0; persist(); pop(); } },
+        { label: 'EXIT', ok: () => { pop(); pop(); } },
       ]));
     }
     return {
@@ -1255,9 +1260,9 @@
           if (hl) rect(p.x - 1, y - 1, p.w + 2, 7);
           text(tok(n), p.x, y, 1, hl ? 0 : 1);
         });
-        if (!notes.length) { center('PRITISNI 1-7', 16); center('ZA PRVU NOTU', 23); }
+        if (!notes.length) { center('PRESS 1-7', 16); center('FOR THE FIRST NOTE', 23); }
         if (!playing && Math.floor(t * 2.5) % 2 === 0 && cLine >= first && cLine <= first + 4) rect(Math.max(0, cX), 8 + (cLine - first) * 7, 1, 7);
-        soft(playing ? 'STOP' : 'OPCIJE');
+        soft(playing ? 'STOP' : 'OPTIONS');
       },
     };
   }
@@ -1270,7 +1275,7 @@
     let disp = '0', acc = null, op = null, fresh = true, choosing = false;
     const num = () => parseFloat(disp);
     function fmt(v) {
-      if (!isFinite(v)) return 'GRESKA';
+      if (!isFinite(v)) return 'ERROR';
       let s = String(+v.toPrecision(10));
       if (s.length > 10) s = v.toExponential(3).toUpperCase().replace('+', '');
       return s;
@@ -1301,12 +1306,12 @@
         } else if (k === 'c-long') pop();
       },
       draw() {
-        header('KALKULATOR');
+        header('CALCULATOR');
         if (acc !== null) right(`${fmt(acc)} ${op}`, 10);
         right(disp, 19, 2);
         text('* = + - X /', 1, 33);
         text('# = .', 60, 33);
-        soft('JEDNAKO');
+        soft('EQUALS');
       },
     };
   }
@@ -1327,10 +1332,10 @@
         else if (k === 'c-long') pop();
       },
       draw() {
-        header('STOPERICA');
+        header('STOPWATCH');
         center(fmt(el()), 12, 2);
-        laps.forEach((l, i) => text(`KRUG: ${fmt(l)}`, 1, 27 + i * 7));
-        if (!laps.length) center(run ? '# = KRUG' : 'C = NULA', 30);
+        laps.forEach((l, i) => text(`LAP: ${fmt(l)}`, 1, 27 + i * 7));
+        if (!laps.length) center(run ? '# = LAP' : 'C = RESET', 30);
         soft(run ? 'STOP' : 'START');
       },
     };
