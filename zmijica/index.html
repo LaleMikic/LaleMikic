@@ -1,0 +1,602 @@
+<title>Retro zmijica</title>
+<meta name="theme-color" content="#121419">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --page: #121419;
+    --body-hi: #3A5078;
+    --body: #22314F;
+    --body-lo: #16213A;
+    --bezel: #0D1424;
+    --lcd: #AFC48A;
+    --lcd-hi: #C3D59C;
+    --key-hi: #E6EAF0;
+    --key-lo: #B6BFCD;
+    --key-ink: #1E2B45;
+    --label: #C9D3E6;
+    --ui: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--label);
+    font-family: var(--ui);
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  #wrap {
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-block: 12px;
+    padding-inline: 16px;
+  }
+  .phone {
+    width: 100%;
+    max-width: 380px;
+    height: 100%;
+    max-height: 820px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 16px 22px;
+    border-radius: 48px 48px 72px 72px / 40px 40px 90px 90px;
+    background: linear-gradient(160deg, var(--body-hi), var(--body) 45%, var(--body-lo));
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, .16),
+      inset 0 -8px 16px rgba(0, 0, 0, .35),
+      0 24px 48px rgba(0, 0, 0, .55);
+  }
+  .brand {
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: .35em;
+    padding-left: .35em;
+    color: var(--label);
+    opacity: .85;
+  }
+  .bezel {
+    background: var(--bezel);
+    border-radius: 20px 20px 28px 28px;
+    padding: 12px;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, .6);
+  }
+  .lcd {
+    border-radius: 6px;
+    background: radial-gradient(ellipse at 40% 30%, var(--lcd-hi), var(--lcd) 70%);
+    box-shadow: inset 0 0 12px rgba(40, 60, 20, .45);
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    aspect-ratio: 84 / 48;
+    touch-action: none;
+  }
+  .navi {
+    display: grid;
+    grid-template-columns: 1fr 1.7fr 1fr;
+    gap: 12px;
+    height: 56px;
+    flex: none;
+  }
+  .keypad {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, minmax(38px, 1fr));
+    gap: 10px 16px;
+  }
+  button {
+    font-family: var(--ui);
+    border: 0;
+    cursor: pointer;
+    touch-action: none;
+    color: var(--key-ink);
+  }
+  button:focus-visible { outline: 3px solid #8FB3FF; outline-offset: 2px; }
+  .key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--key-hi), var(--key-lo));
+    box-shadow: 0 3px 0 #7C879B, 0 5px 8px rgba(0, 0, 0, .35);
+    transition: transform .05s, box-shadow .05s, filter .05s;
+  }
+  .key b { font-size: 22px; font-weight: 700; line-height: 1; }
+  .key small { font-size: 11px; font-weight: 500; letter-spacing: .04em; opacity: .7; }
+  .key.dir small { font-size: 13px; opacity: .9; }
+  .key:active, .key.pressed {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #7C879B, 0 2px 4px rgba(0, 0, 0, .35);
+    filter: brightness(.93);
+  }
+  .key.ok {
+    border-radius: 18px 18px 28px 28px;
+    background: linear-gradient(180deg, #5C6F95, #34466A);
+    color: #E6EAF0;
+    box-shadow: 0 3px 0 #1A2440, 0 5px 8px rgba(0, 0, 0, .35);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .12em;
+  }
+  .key.c b { font-size: 20px; }
+  .rocker {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 3px;
+  }
+  .rocker .key { border-radius: 16px 16px 6px 6px; font-size: 12px; }
+  .rocker .key + .key { border-radius: 6px 6px 16px 16px; }
+  @media (max-height: 620px) {
+    .brand { display: none; }
+    .phone { gap: 10px; padding-top: 12px; }
+    .navi { height: 46px; }
+    .key b { font-size: 18px; }
+  }
+</style>
+
+<div id="wrap">
+  <div class="phone">
+    <div class="brand">LALEFON</div>
+    <div class="bezel">
+      <div class="lcd"><canvas id="lcd" aria-label="Ekran igre Zmijica"></canvas></div>
+    </div>
+    <div class="navi">
+      <button class="key c" data-a="back" aria-label="C, nazad"><b>C</b></button>
+      <button class="key ok" data-a="select" aria-label="OK">OK</button>
+      <div class="rocker">
+        <button class="key" data-a="up" aria-label="Gore">▲</button>
+        <button class="key" data-a="down" aria-label="Dole">▼</button>
+      </div>
+    </div>
+    <div class="keypad">
+      <button class="key" data-a="none"><b>1</b><small>.,?</small></button>
+      <button class="key dir" data-a="up" aria-label="2, gore"><b>2</b><small>▲</small></button>
+      <button class="key" data-a="none"><b>3</b><small>def</small></button>
+      <button class="key dir" data-a="left" aria-label="4, levo"><b>4</b><small>◀</small></button>
+      <button class="key dir" data-a="select" aria-label="5, OK"><b>5</b><small>OK</small></button>
+      <button class="key dir" data-a="right" aria-label="6, desno"><b>6</b><small>▶</small></button>
+      <button class="key" data-a="none"><b>7</b><small>pqrs</small></button>
+      <button class="key dir" data-a="down" aria-label="8, dole"><b>8</b><small>▼</small></button>
+      <button class="key" data-a="none"><b>9</b><small>wxyz</small></button>
+      <button class="key" data-a="none"><b>*</b><small>+</small></button>
+      <button class="key" data-a="none"><b>0</b><small>⎵</small></button>
+      <button class="key" data-a="sound" aria-label="Taraba, zvuk"><b>#</b><small>zvuk</small></button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ================= LCD: 84 x 48 pixels, like the real thing =================
+  const LW = 84, LH = 48;
+  const fb = new Uint8Array(LW * LH);
+  const canvas = document.getElementById('lcd');
+  const ctx = canvas.getContext('2d');
+  const INK = '#1F2A16';
+  let ghost = null, cellP = 1, cellS = 1, offX = 0, offY = 0;
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const r = canvas.getBoundingClientRect();
+    canvas.width = Math.max(84, Math.round(r.width * dpr));
+    canvas.height = Math.max(48, Math.round(r.height * dpr));
+    cellP = Math.max(1, Math.floor(Math.min(canvas.width / LW, canvas.height / LH)));
+    cellS = cellP > 3 ? cellP - Math.max(1, Math.round(cellP * 0.12)) : cellP;
+    offX = Math.floor((canvas.width - cellP * LW) / 2);
+    offY = Math.floor((canvas.height - cellP * LH) / 2);
+    // faint "unlit pixel" grid, pre-rendered once per size
+    ghost = document.createElement('canvas');
+    ghost.width = canvas.width; ghost.height = canvas.height;
+    const g = ghost.getContext('2d');
+    g.fillStyle = 'rgba(31,42,22,0.07)';
+    for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++) {
+      g.fillRect(offX + x * cellP, offY + y * cellP, cellS, cellS);
+    }
+  }
+
+  function present() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(ghost, 0, 0);
+    ctx.fillStyle = INK;
+    for (let y = 0; y < LH; y++) {
+      const row = y * LW;
+      for (let x = 0; x < LW; x++) {
+        if (fb[row + x]) ctx.fillRect(offX + x * cellP, offY + y * cellP, cellS, cellS);
+      }
+    }
+  }
+
+  const cls = () => fb.fill(0);
+  function px(x, y, v = 1) { if (x >= 0 && x < LW && y >= 0 && y < LH) fb[y * LW + x] = v; }
+  function rect(x, y, w, h, v = 1) { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) px(x + i, y + j, v); }
+  function frame(x, y, w, h) { rect(x, y, w, 1); rect(x, y + h - 1, w, 1); rect(x, y, 1, h); rect(x + w - 1, y, 1, h); }
+
+  // ================= 3x5 pixel font =================
+  const FONT = {
+    A:'010101111101101', B:'110101110101110', C:'011100100100011', D:'110101101101110',
+    E:'111100110100111', F:'111100110100100', G:'011100101101011', H:'101101111101101',
+    I:'111010010010111', J:'001001001101010', K:'101101110101101', L:'100100100100111',
+    M:'101111111101101', N:'110101101101101', O:'010101101101010', P:'110101110100100',
+    Q:'010101101110011', R:'110101110101101', S:'011100010001110', T:'111010010010010',
+    U:'101101101101111', V:'101101101101010', W:'101101111111101', X:'101101010101101',
+    Y:'101101010010010', Z:'111001010100111',
+    0:'111101101101111', 1:'010110010010111', 2:'110001010100111', 3:'110001010001110',
+    4:'101101111001001', 5:'111100110001110', 6:'011100111101111', 7:'111001010010010',
+    8:'111101111101111', 9:'111101111001110',
+    ' ':'000000000000000', '!':'010010010000010', ':':'000010000010000', '.':'000000000000010',
+    '-':'000000111000000', '=':'000111000111000', '<':'001010100010001', '>':'100010001010100',
+  };
+  const textW = (s, k = 1) => (s.length * 4 - 1) * k;
+  function text(s, x, y, k = 1, v = 1) {
+    s = String(s).toUpperCase();
+    for (let n = 0; n < s.length; n++) {
+      const g = FONT[s[n]] || FONT[' '];
+      for (let i = 0; i < 15; i++) if (g[i] === '1') {
+        rect(x + n * 4 * k + (i % 3) * k, y + Math.floor(i / 3) * k, k, k, v);
+      }
+    }
+  }
+  const center = (s, y, k = 1, v = 1) => text(s, Math.floor((LW - textW(s, k)) / 2), y, k, v);
+
+  // ================= sound =================
+  let audio = null;
+  let soundOn = true;
+  function initAudio() {
+    if (audio) { try { audio.resume(); } catch (e) {} return; }
+    try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; }
+  }
+  function beep(freq, dur, when = 0, vol = 0.05) {
+    if (!audio || !soundOn) return;
+    try {
+      const t = audio.currentTime + when;
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = 'square';
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(vol, t);
+      g.gain.setValueAtTime(0, t + dur);
+      o.connect(g).connect(audio.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+    } catch (e) {}
+  }
+  const keyTone = () => beep(1400, 0.035, 0, 0.03);
+  function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+
+  // ================= settings + record =================
+  const KEY = 'retro-zmijica';
+  let level = 3, maze = 0, best = 0;
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || '{}');
+    if (s.level >= 1 && s.level <= 9) level = s.level;
+    if (s.maze >= 0 && s.maze <= 2) maze = s.maze;
+    if (s.best > 0) best = s.best;
+    if (s.soundOn === false) soundOn = false;
+  } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ level, maze, best, soundOn })); } catch (e) {} }
+
+  // ================= game field =================
+  // 20 x 10 cells of 4x4 pixels, inside a frame from (1,6) to (82,47)
+  const COLS = 20, ROWS = 10, FX = 2, FY = 7;
+  const MAZES = ['NEMA', 'KUTIJA', 'TUNEL'];
+  function mazeWalls(m) {
+    const w = new Set();
+    if (m === 2) for (let x = 3; x <= 16; x++) { w.add(x + ',2'); w.add(x + ',7'); }
+    return w;
+  }
+  const wraps = m => m !== 1;
+
+  const BONUS_SPRITES = [
+    ['0101010', '1111111', '0101010'], // buba
+    ['0110010', '1111111', '0110010'], // riba
+    ['1000001', '0111110', '1010101'], // pauk
+  ];
+
+  let state = 'menu';       // menu | play | paused | dying | over
+  let menuIdx = 0;
+  let snake, dir, queue, food, bonus, walls, score, eaten, stepMs, acc, dieT, newBest;
+
+  function newGame() {
+    walls = mazeWalls(maze);
+    snake = [];
+    for (let i = 0; i < 5; i++) snake.push({ x: 8 - i, y: 5, full: false });
+    dir = { x: 1, y: 0 };
+    queue = [];
+    score = 0; eaten = 0; bonus = null; acc = 0; newBest = false;
+    stepMs = 330 - level * 30;
+    placeFood();
+    state = 'play';
+  }
+
+  const occupied = (x, y) =>
+    walls.has(x + ',' + y) || snake.some(s => s.x === x && s.y === y) ||
+    (food && food.x === x && food.y === y) ||
+    (bonus && bonus.y === y && (bonus.x === x || bonus.x + 1 === x));
+
+  function freeCells(w = 1) {
+    const out = [];
+    for (let y = 0; y < ROWS; y++) for (let x = 0; x <= COLS - w; x++) {
+      let ok = true;
+      for (let k = 0; k < w; k++) if (occupied(x + k, y)) ok = false;
+      if (ok) out.push({ x, y });
+    }
+    return out;
+  }
+  function placeFood() {
+    food = null;
+    const f = freeCells(1);
+    food = f.length ? f[Math.floor(Math.random() * f.length)] : null;
+  }
+  function placeBonus() {
+    const f = freeCells(2);
+    if (!f.length) return;
+    const c = f[Math.floor(Math.random() * f.length)];
+    bonus = { x: c.x, y: c.y, t: 20, sprite: BONUS_SPRITES[Math.floor(Math.random() * BONUS_SPRITES.length)] };
+  }
+
+  function step() {
+    if (queue.length) dir = queue.shift();
+    const h = snake[0];
+    let nx = h.x + dir.x, ny = h.y + dir.y;
+    if (wraps(maze)) { nx = (nx + COLS) % COLS; ny = (ny + ROWS) % ROWS; }
+    else if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return die();
+    if (walls.has(nx + ',' + ny)) return die();
+    const eats = food && food.x === nx && food.y === ny;
+    const body = eats ? snake : snake.slice(0, -1);
+    if (body.some(s => s.x === nx && s.y === ny)) return die();
+
+    snake.unshift({ x: nx, y: ny, full: eats });
+    if (eats) {
+      score += level; eaten++;
+      beep(1760, 0.05);
+      placeFood();
+      if (eaten % 5 === 0 && !bonus) placeBonus();
+    } else {
+      snake.pop();
+    }
+    if (bonus) {
+      if (ny === bonus.y && (nx === bonus.x || nx === bonus.x + 1)) {
+        score += level * 2 + bonus.t;
+        bonus = null;
+        [1320, 1760, 2200].forEach((f, i) => beep(f, 0.05, i * 0.06));
+      } else if (--bonus.t <= 0) bonus = null;
+    }
+  }
+
+  function die() {
+    state = 'dying'; dieT = 0;
+    beep(440, 0.12); beep(330, 0.12, 0.14); beep(220, 0.3, 0.28);
+    buzz([120, 60, 200]);
+    if (score > best) { best = score; newBest = true; save(); }
+  }
+
+  // ================= drawing =================
+  const cellX = x => FX + x * 4, cellY = y => FY + y * 4;
+  const adj = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
+
+  function drawSnake() {
+    for (let i = snake.length - 1; i >= 0; i--) {
+      const s = snake[i], X = cellX(s.x), Y = cellY(s.y);
+      rect(X, Y, 3, 3);
+      if (i > 0 && !s.full) px(X + 1, Y + 1, 0);           // ring-shaped body segment
+      const n = snake[i - 1];                                 // connect to the segment ahead
+      if (n && adj(s, n)) {
+        if (n.x > s.x) px(X + 3, Y + 1); else if (n.x < s.x) px(X - 1, Y + 1);
+        else if (n.y > s.y) px(X + 1, Y + 3); else px(X + 1, Y - 1);
+      }
+    }
+    // head: eye, and the mouth opens when food is right ahead
+    const h = snake[0], X = cellX(h.x), Y = cellY(h.y);
+    const eye = dir.x === 1 ? [X + 1, Y] : dir.x === -1 ? [X + 1, Y] : dir.y === 1 ? [X, Y + 1] : [X, Y + 1];
+    px(eye[0], eye[1], 0);
+    let fx = h.x + dir.x, fy = h.y + dir.y;
+    if (wraps(maze)) { fx = (fx + COLS) % COLS; fy = (fy + ROWS) % ROWS; }
+    if (food && food.x === fx && food.y === fy) {
+      if (dir.x === 1) px(X + 2, Y + 1, 0); else if (dir.x === -1) px(X, Y + 1, 0);
+      else if (dir.y === 1) px(X + 1, Y + 2, 0); else px(X + 1, Y, 0);
+    }
+  }
+
+  function num4(n) { return String(Math.min(n, 9999)).padStart(4, '0'); }
+
+  function drawField(showSnake = true) {
+    cls();
+    text(num4(score), 1, 0);
+    if (bonus) {
+      bonus.sprite.forEach((row, j) => { for (let i = 0; i < 7; i++) if (row[i] === '1') px(63 + i, 1 + j); });
+      text(String(bonus.t).padStart(2, '0'), 76, 0);
+    }
+    frame(1, 6, 82, 42);
+    if (maze === 1) frame(0, 5, 84, 43);                   // thicker frame: the walls kill
+    walls.forEach(k => { const [x, y] = k.split(',').map(Number); rect(cellX(x), cellY(y), 4, 4); });
+    if (food) { const X = cellX(food.x), Y = cellY(food.y); px(X + 1, Y); px(X, Y + 1); px(X + 2, Y + 1); px(X + 1, Y + 2); }
+    if (bonus) {
+      const X = cellX(bonus.x), Y = cellY(bonus.y);
+      bonus.sprite.forEach((row, j) => { for (let i = 0; i < 7; i++) if (row[i] === '1') px(X + i, Y + j); });
+    }
+    if (showSnake) drawSnake();
+  }
+
+  const MENU = ['NOVA IGRA', 'NIVO', 'LAVIRINT', 'ZVUK', 'REKORD'];
+  function menuValue(i) {
+    return i === 1 ? String(level) : i === 2 ? MAZES[maze] : i === 3 ? (soundOn ? 'DA' : 'NE') : i === 4 ? String(best) : '';
+  }
+  function drawMenu(t) {
+    cls();
+    center('ZMIJICA', 0, 2);
+    // a tiny snake crawling under the title
+    const off = Math.floor(t * 8) % 96;
+    for (let i = 0; i < 12; i++) { const x = off - i - 6; if (i % 3 !== 2) px(x, 11); }
+    MENU.forEach((label, i) => {
+      const y = 14 + i * 7, sel = i === menuIdx;
+      if (sel) rect(0, y - 1, LW, 7);
+      text(label, 2, y, 1, sel ? 0 : 1);
+      const v = menuValue(i);
+      if (v) text(v, LW - 2 - textW(v), y, 1, sel ? 0 : 1);
+    });
+  }
+
+  function drawBox(lines) {
+    const h = lines.length * 7 + 5;
+    const y0 = Math.floor((LH - h) / 2);
+    rect(8, y0, 68, h, 0);
+    frame(8, y0, 68, h);
+    lines.forEach((l, i) => center(l, y0 + 3 + i * 7));
+  }
+
+  function drawOver() {
+    cls();
+    center('KRAJ IGRE!', 1);
+    center('REZULTAT:', 10);
+    center(String(score), 17, 2);
+    center(newBest ? 'NOVI REKORD!' : 'REKORD ' + best, 30);
+    center('5 = NOVA  C = MENI', 41);
+  }
+
+  function render(t) {
+    if (state === 'menu') drawMenu(t);
+    else if (state === 'play') drawField();
+    else if (state === 'paused') { drawField(); drawBox(['PAUZA', '5 = NASTAVI', 'C = MENI']); }
+    else if (state === 'dying') drawField(Math.floor(dieT * 6) % 2 === 0);
+    else if (state === 'over') drawOver();
+    present();
+  }
+
+  // ================= input =================
+  const DIRS = { up: { x: 0, y: -1 }, down: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 } };
+  function turn(d) {
+    const last = queue.length ? queue[queue.length - 1] : dir;
+    if ((d.x === last.x && d.y === last.y) || (d.x === -last.x && d.y === -last.y)) return;
+    if (queue.length < 2) queue.push(d);
+  }
+
+  function action(a) {
+    if (a === 'sound') { soundOn = !soundOn; save(); keyTone(); return; }
+    if (state === 'menu') {
+      if (a === 'up') menuIdx = (menuIdx + MENU.length - 1) % MENU.length;
+      else if (a === 'down') menuIdx = (menuIdx + 1) % MENU.length;
+      else if (a === 'left' || a === 'right' || a === 'select') {
+        const d = a === 'left' ? -1 : 1;
+        if (menuIdx === 0 && a === 'select') newGame();
+        else if (menuIdx === 1) level = ((level - 1 + d + 9) % 9) + 1;
+        else if (menuIdx === 2) maze = (maze + d + MAZES.length) % MAZES.length;
+        else if (menuIdx === 3) soundOn = !soundOn;
+        save();
+      }
+    } else if (state === 'play') {
+      if (DIRS[a]) turn(DIRS[a]);
+      else if (a === 'select' || a === 'back') state = 'paused';
+    } else if (state === 'paused') {
+      if (a === 'select') state = 'play';
+      else if (a === 'back') state = 'menu';
+    } else if (state === 'over') {
+      if (a === 'select') newGame();
+      else if (a === 'back') state = 'menu';
+    }
+  }
+
+  // on-screen keys: react on press, not on release, like a real keypad
+  document.querySelectorAll('button[data-a]').forEach(b => {
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      initAudio();
+      if (b.dataset.a !== 'sound') keyTone();
+      action(b.dataset.a);
+    });
+    b.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); initAudio(); keyTone(); action(b.dataset.a); }
+    });
+  });
+
+  // physical keyboard: arrows, WASD, numpad digits
+  const KEYMAP = {
+    ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+    w: 'up', s: 'down', a: 'left', d: 'right',
+    2: 'up', 8: 'down', 4: 'left', 6: 'right', 5: 'select',
+    Enter: 'select', ' ': 'select', Escape: 'back', Backspace: 'back', c: 'back', '#': 'sound',
+  };
+  window.addEventListener('keydown', e => {
+    const a = KEYMAP[e.key] || KEYMAP[e.key.toLowerCase()];
+    if (!a) return;
+    e.preventDefault();
+    initAudio();
+    action(a);
+  });
+
+  // swipe anywhere outside the keys; tap on the screen = OK (or pick a menu row)
+  let sw = null;
+  document.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;
+    initAudio();
+    sw = { x: e.clientX, y: e.clientY, done: false };
+  });
+  document.addEventListener('pointermove', e => {
+    if (!sw || sw.done) return;
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+    sw.done = true;
+    action(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+  });
+  document.addEventListener('pointerup', e => {
+    if (!sw) return;
+    const tapped = !sw.done;
+    sw = null;
+    if (!tapped || e.target !== canvas) return;
+    if (state === 'menu') {
+      const r = canvas.getBoundingClientRect();
+      const ly = ((e.clientY - r.top) / r.height) * LH;
+      const row = Math.floor((ly - 13) / 7);
+      if (row >= 0 && row < MENU.length) {
+        if (row === menuIdx || row === 0) { menuIdx = row; action('select'); }
+        else menuIdx = row;
+      }
+    } else action('select');
+  });
+  document.addEventListener('pointercancel', () => { sw = null; });
+
+  document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'play') state = 'paused'; });
+
+  // Android app: the system Back button acts as C; from the menu it closes the app
+  window.__zmijicaBack = () => {
+    if (state === 'menu') return false;
+    action('back');
+    return true;
+  };
+
+  // ================= loop =================
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(now - last, 250);
+    last = now;
+    if (state === 'play') {
+      acc += dt;
+      while (acc >= stepMs && state === 'play') { acc -= stepMs; step(); }
+    } else if (state === 'dying') {
+      dieT += dt / 1000;
+      if (dieT > 1.4) state = 'over';
+    }
+    render(now / 1000);
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', resize);
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>

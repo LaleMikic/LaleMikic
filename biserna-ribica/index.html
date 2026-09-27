@@ -1,0 +1,641 @@
+<title>Biserna ribica</title>
+<meta name="theme-color" content="#08222F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --deep: #08222F;
+    --sea: #0F3D52;
+    --coral: #FF8A5B;
+    --pearl: #F3EDE2;
+    --foam: #7FD1C1;
+    --jelly: #C58BF2;
+    --ink: #EAF4F2;
+    --muted: #9FC3C4;
+    --display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+    --body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--deep);
+    color: var(--ink);
+    font-family: var(--body);
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #game {
+    position: relative;
+    height: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+  .hud {
+    position: absolute;
+    inset: 0 0 auto 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    pointer-events: none;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+  }
+  .hud .stat { display: flex; align-items: center; gap: 6px; }
+  .hud .dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff, var(--pearl) 45%, #cbbfae);
+  }
+  .hud .depth { color: var(--foam); }
+  .hud button {
+    pointer-events: auto;
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: rgba(8, 34, 47, .55);
+    border: 1px solid rgba(127, 209, 193, .35);
+    border-radius: 999px;
+    padding: 4px 12px;
+    cursor: pointer;
+  }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding-inline: 24px;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(8, 34, 47, .15), rgba(8, 34, 47, .7));
+  }
+  .overlay h1 {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(44px, 13vw, 64px);
+    line-height: .95;
+    color: var(--pearl);
+    text-wrap: balance;
+    text-shadow: 0 4px 0 var(--sea), 0 8px 24px rgba(0, 0, 0, .4);
+  }
+  .overlay h1 span { color: var(--coral); display: block; }
+  .overlay p {
+    margin: 0;
+    max-width: 30ch;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .overlay .legend {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 12px;
+    align-items: center;
+    text-align: left;
+    font-size: 15px;
+    color: var(--ink);
+  }
+  .legend i {
+    width: 18px; height: 18px; border-radius: 50%; display: block;
+  }
+  .legend .l-pearl { background: radial-gradient(circle at 35% 35%, #fff, var(--pearl) 45%, #cbbfae); }
+  .legend .l-jelly { background: var(--jelly); border-radius: 50% 50% 20% 20%; }
+  .legend .l-shell { background: #F2C14E; border-radius: 50% 50% 10% 10%; }
+  .play {
+    margin-top: 6px;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 24px;
+    color: var(--deep);
+    background: var(--coral);
+    border: 0;
+    border-radius: 18px;
+    padding: 10px 40px 6px;
+    box-shadow: 0 5px 0 #C9562E;
+    cursor: pointer;
+  }
+  .play:active { transform: translateY(3px); box-shadow: 0 2px 0 #C9562E; }
+  button:focus-visible { outline: 3px solid var(--foam); outline-offset: 3px; }
+  .final {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 56px;
+    line-height: 1;
+    color: var(--pearl);
+    font-variant-numeric: tabular-nums;
+  }
+  .small { font-size: 14px; color: var(--muted); }
+  .best-new { color: var(--coral); font-weight: 700; }
+</style>
+
+<div id="game">
+  <canvas id="c" aria-label="Igra Biserna ribica"></canvas>
+
+  <div class="hud" id="hud" hidden>
+    <div class="stat depth" id="depth">↑ 0 m</div>
+    <div class="stat"><span class="dot"></span><span id="pearls">0</span></div>
+    <button id="pause" type="button" aria-label="Pauza">II</button>
+  </div>
+
+  <div class="overlay" id="start">
+    <h1>Biserna <span>ribica</span></h1>
+    <p>Pliva ka površini. Vuci prstom levo-desno da upravljaš ribicom.</p>
+    <div class="legend">
+      <i class="l-pearl"></i><span>Biser: +10 poena</span>
+      <i class="l-jelly"></i><span>Meduza: kraj igre</span>
+      <i class="l-shell"></i><span>Zlatna školjka: štit za jedan udarac</span>
+    </div>
+    <button class="play" id="playBtn" type="button">Igraj</button>
+    <div class="small" id="bestStart"></div>
+  </div>
+
+  <div class="overlay" id="paused" hidden>
+    <h1>Pauza</h1>
+    <button class="play" id="resumeBtn" type="button">Nastavi</button>
+  </div>
+
+  <div class="overlay" id="over" hidden>
+    <p>Meduza te je opekla!</p>
+    <div class="final" id="finalScore">0</div>
+    <div class="small" id="finalDetail"></div>
+    <div class="small" id="finalBest"></div>
+    <button class="play" id="againBtn" type="button">Ponovo</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const ui = {
+    hud: $('hud'), depth: $('depth'), pearls: $('pearls'),
+    start: $('start'), paused: $('paused'), over: $('over'),
+    finalScore: $('finalScore'), finalDetail: $('finalDetail'),
+    finalBest: $('finalBest'), bestStart: $('bestStart'),
+  };
+
+  const C = {
+    deep: '#08222F', sea: '#0F3D52', coral: '#FF8A5B', coralDark: '#C9562E',
+    pearl: '#F3EDE2', foam: '#7FD1C1', jelly: '#C58BF2', gold: '#F2C14E',
+  };
+
+  // ---------- storage ----------
+  const BEST_KEY = 'biserna-ribica-best';
+  function loadBest() { try { return +localStorage.getItem(BEST_KEY) || 0; } catch (e) { return 0; } }
+  function saveBest(v) { try { localStorage.setItem(BEST_KEY, String(v)); } catch (e) {} }
+  let best = loadBest();
+  function showBestStart() { ui.bestStart.textContent = best ? `Rekord: ${best}` : ''; }
+  showBestStart();
+
+  // ---------- sizing ----------
+  let W = 0, H = 0, S = 1, dpr = 1;
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const r = canvas.getBoundingClientRect();
+    W = r.width; H = r.height;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    S = Math.max(0.75, Math.min(W, 520) / 400);
+    if (fish) {
+      fish.y = H * 0.74;
+      fish.x = Math.min(Math.max(fish.x, 20), W - 20);
+    }
+  }
+
+  // ---------- sound ----------
+  let audio = null;
+  function initAudio() {
+    if (audio) return;
+    try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; }
+  }
+  function blip(freq, dur, type = 'sine', vol = 0.08, slide = 0) {
+    if (!audio) return;
+    try {
+      const t = audio.currentTime;
+      const o = audio.createOscillator();
+      const g = audio.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(freq * slide, t + dur);
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(audio.destination);
+      o.start(t); o.stop(t + dur);
+    } catch (e) {}
+  }
+  function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
+
+  // ---------- state ----------
+  let state = 'menu'; // menu | play | paused | over
+  let fish, things, snow, particles, time, speed, meters, pearlCount, spawnT, shield, invuln, shake;
+
+  function reset() {
+    fish = { x: W / 2, y: H * 0.74, tx: W / 2, vx: 0, wag: 0 };
+    things = [];
+    particles = [];
+    time = 0; meters = 0; pearlCount = 0; spawnT = 0.6;
+    speed = 150; shield = false; invuln = 0; shake = 0;
+  }
+  function makeSnow() {
+    snow = Array.from({ length: 60 }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      r: Math.random() * 1.6 + 0.4, z: Math.random() * 0.6 + 0.2,
+    }));
+  }
+
+  // ---------- spawning ----------
+  function spawn() {
+    const margin = 30 * S;
+    const x = margin + Math.random() * (W - margin * 2);
+    const roll = Math.random();
+    const hard = Math.min(time / 90, 1);
+    if (roll < 0.55 + hard * 0.15) {
+      things.push({ kind: 'jelly', x, y: -60 * S, r: (18 + Math.random() * 10) * S,
+        phase: Math.random() * 6.28, drift: (Math.random() - 0.5) * 40 * (0.4 + hard) });
+    } else if (roll < 0.97) {
+      // a short line of pearls
+      const n = 1 + Math.floor(Math.random() * 4);
+      const dx = (Math.random() < 0.5 ? -1 : 1) * 22 * S;
+      for (let i = 0; i < n; i++) {
+        const px = Math.min(Math.max(x + dx * i, margin), W - margin);
+        things.push({ kind: 'pearl', x: px, y: -30 * S - i * 34 * S, r: 9 * S, phase: Math.random() * 6.28 });
+      }
+    } else if (!shield) {
+      things.push({ kind: 'shell', x, y: -40 * S, r: 14 * S, phase: 0 });
+    }
+  }
+
+  function burst(x, y, color, n = 10) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, v = (40 + Math.random() * 120) * S;
+      particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.6, max: 0.6, color, r: (2 + Math.random() * 3) * S });
+    }
+  }
+
+  // ---------- update ----------
+  function update(dt) {
+    time += dt;
+    speed = (150 + Math.min(time * 4, 260)) * S;
+    meters += speed * dt / (40 * S);
+
+    // fish follows target
+    const prevX = fish.x;
+    fish.x += (fish.tx - fish.x) * Math.min(1, dt * 12);
+    fish.x = Math.min(Math.max(fish.x, 18 * S), W - 18 * S);
+    fish.vx = (fish.x - prevX) / Math.max(dt, 0.001);
+    fish.wag += dt * (10 + speed / (40 * S));
+
+    spawnT -= dt;
+    if (spawnT <= 0) {
+      spawn();
+      spawnT = Math.max(0.32, 0.9 - time * 0.006) * (0.7 + Math.random() * 0.6);
+    }
+
+    if (invuln > 0) invuln -= dt;
+    if (shake > 0) shake -= dt;
+
+    const fr = 14 * S;
+    for (const t of things) {
+      t.y += speed * dt * (t.kind === 'jelly' ? 0.85 : 1);
+      t.phase += dt * 3;
+      if (t.kind === 'jelly') {
+        t.x += t.drift * dt;
+        if (t.x < t.r || t.x > W - t.r) t.drift *= -1;
+      }
+      // collision (jelly hitbox sits a bit lower to include tentacles)
+      const cy = t.kind === 'jelly' ? t.y + t.r * 0.4 : t.y;
+      const hitR = t.kind === 'jelly' ? t.r * 0.9 : t.r + 6 * S;
+      const dx = t.x - fish.x, dy = cy - fish.y;
+      if (!t.dead && dx * dx + dy * dy < (hitR + fr) ** 2) {
+        if (t.kind === 'pearl') {
+          t.dead = true; pearlCount++;
+          burst(t.x, t.y, C.pearl, 8);
+          blip(880 + (pearlCount % 5) * 110, 0.12, 'triangle', 0.06);
+        } else if (t.kind === 'shell') {
+          t.dead = true; shield = true;
+          burst(t.x, t.y, C.gold, 14);
+          blip(520, 0.3, 'triangle', 0.08, 2);
+        } else if (invuln <= 0) {
+          if (shield) {
+            shield = false; t.dead = true; invuln = 1; shake = 0.25;
+            burst(t.x, t.y, C.jelly, 16);
+            blip(300, 0.25, 'square', 0.05, 0.5);
+            buzz(60);
+          } else {
+            gameOver();
+            return;
+          }
+        }
+      }
+    }
+    things = things.filter(t => !t.dead && t.y < H + 80 * S);
+
+    for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 60 * S * dt; p.life -= dt; }
+    particles = particles.filter(p => p.life > 0);
+
+    ui.depth.textContent = `↑ ${Math.floor(meters)} m`;
+    ui.pearls.textContent = pearlCount;
+  }
+
+  function score() { return Math.floor(meters) + pearlCount * 10; }
+
+  // ---------- drawing ----------
+  function drawBackground(t, scroll) {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#1C6275');
+    g.addColorStop(0.45, C.sea);
+    g.addColorStop(1, C.deep);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // light rays from the surface
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 4; i++) {
+      const x = W * (0.15 + i * 0.25) + Math.sin(t * 0.3 + i * 1.7) * 30;
+      const rg = ctx.createLinearGradient(0, 0, 0, H * 0.8);
+      rg.addColorStop(0, 'rgba(180,240,230,0.10)');
+      rg.addColorStop(1, 'rgba(180,240,230,0)');
+      ctx.fillStyle = rg;
+      ctx.beginPath();
+      ctx.moveTo(x - 18, 0); ctx.lineTo(x + 18, 0);
+      ctx.lineTo(x + 70 + i * 10, H * 0.8); ctx.lineTo(x - 40, H * 0.8);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+
+    // marine snow, parallax
+    ctx.fillStyle = 'rgba(234,244,242,0.35)';
+    for (const s of snow) {
+      const y = (s.y + scroll * s.z) % H;
+      ctx.beginPath();
+      ctx.arc(s.x + Math.sin(t + s.y) * 4, y, s.r, 0, 6.283);
+      ctx.fill();
+    }
+  }
+
+  function drawFish(f, t) {
+    ctx.save();
+    ctx.translate(f.x, f.y);
+    const tilt = Math.max(-0.5, Math.min(0.5, f.vx / (900 * S)));
+    ctx.rotate(tilt);
+    ctx.scale(S, S);
+    if (invuln > 0 && Math.floor(invuln * 12) % 2 === 0) ctx.globalAlpha = 0.45;
+
+    // tail (points down, fish swims up)
+    const wag = Math.sin(f.wag) * 7;
+    ctx.fillStyle = C.coralDark;
+    ctx.beginPath();
+    ctx.moveTo(0, 12);
+    ctx.quadraticCurveTo(wag * 0.5, 22, -11 + wag, 32);
+    ctx.lineTo(11 + wag, 32);
+    ctx.quadraticCurveTo(wag * 0.5, 22, 0, 12);
+    ctx.fill();
+
+    // side fins
+    ctx.beginPath();
+    ctx.ellipse(-12, 4, 7, 4, -0.6 + Math.sin(f.wag * 0.7) * 0.2, 0, 6.283);
+    ctx.ellipse(12, 4, 7, 4, 0.6 - Math.sin(f.wag * 0.7) * 0.2, 0, 6.283);
+    ctx.fill();
+
+    // body
+    const bg = ctx.createLinearGradient(-12, 0, 12, 0);
+    bg.addColorStop(0, '#FFA57E');
+    bg.addColorStop(1, C.coral);
+    ctx.fillStyle = bg;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 12, 17, 0, 0, 6.283);
+    ctx.fill();
+
+    // stripe
+    ctx.fillStyle = C.pearl;
+    ctx.beginPath();
+    ctx.ellipse(0, 3, 11, 2.6, 0, 0, 6.283);
+    ctx.fill();
+
+    // eyes
+    for (const ex of [-5, 5]) {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(ex, -8, 3.6, 0, 6.283); ctx.fill();
+      ctx.fillStyle = C.deep;
+      ctx.beginPath(); ctx.arc(ex, -9, 1.9, 0, 6.283); ctx.fill();
+    }
+    ctx.restore();
+
+    if (shield) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(242,193,78,0.8)';
+      ctx.lineWidth = 2.5 * S;
+      ctx.setLineDash([6 * S, 5 * S]);
+      ctx.lineDashOffset = -t * 30;
+      ctx.beginPath(); ctx.arc(f.x, f.y + 4 * S, 28 * S, 0, 6.283); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawJelly(j) {
+    const r = j.r, pulse = Math.sin(j.phase) * 0.08;
+    ctx.save();
+    ctx.translate(j.x, j.y);
+    // tentacles
+    ctx.strokeStyle = 'rgba(197,139,242,0.7)';
+    ctx.lineWidth = 2 * S;
+    ctx.lineCap = 'round';
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      const bx = i * r * 0.32;
+      ctx.moveTo(bx, 0);
+      for (let k = 1; k <= 4; k++) {
+        ctx.lineTo(bx + Math.sin(j.phase * 1.3 + k + i) * 4 * S, k * r * 0.35);
+      }
+      ctx.stroke();
+    }
+    // dome
+    const dg = ctx.createRadialGradient(-r * 0.3, -r * 0.5, 2, 0, -r * 0.2, r * 1.2);
+    dg.addColorStop(0, 'rgba(240,215,255,0.95)');
+    dg.addColorStop(1, 'rgba(197,139,242,0.75)');
+    ctx.fillStyle = dg;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r * (1 + pulse), r * (0.85 - pulse), 0, Math.PI, 0);
+    ctx.quadraticCurveTo(r * 0.5, r * 0.25, 0, r * 0.1);
+    ctx.quadraticCurveTo(-r * 0.5, r * 0.25, -r * (1 + pulse), 0);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPearl(p) {
+    const r = p.r;
+    const g = ctx.createRadialGradient(p.x - r * 0.35, p.y - r * 0.35, 1, p.x, p.y, r);
+    g.addColorStop(0, '#ffffff');
+    g.addColorStop(0.5, C.pearl);
+    g.addColorStop(1, '#BFB29F');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.283); ctx.fill();
+    // glint
+    const a = (Math.sin(p.phase) + 1) / 2;
+    ctx.fillStyle = `rgba(255,255,255,${0.3 + a * 0.6})`;
+    ctx.beginPath(); ctx.arc(p.x - r * 0.35, p.y - r * 0.4, r * 0.22, 0, 6.283); ctx.fill();
+  }
+
+  function drawShell(s) {
+    const r = s.r;
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.rotate(Math.sin(s.phase) * 0.15);
+    ctx.fillStyle = C.gold;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.3, r * 0.8);
+    ctx.lineTo(-r, -r * 0.1);
+    ctx.quadraticCurveTo(0, -r * 1.5, r, -r * 0.1);
+    ctx.lineTo(r * 0.3, r * 0.8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#B98A1F';
+    ctx.lineWidth = 1.5 * S;
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath(); ctx.moveTo(0, r * 0.75); ctx.lineTo(i * r * 0.4, -r * 0.65 + Math.abs(i) * r * 0.15); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function draw(t) {
+    ctx.save();
+    if (shake > 0) ctx.translate((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8);
+    drawBackground(t, state === 'menu' ? t * 40 : meters * 40 * S);
+    for (const th of things) {
+      if (th.kind === 'jelly') drawJelly(th);
+      else if (th.kind === 'pearl') drawPearl(th);
+      else drawShell(th);
+    }
+    for (const p of particles) {
+      ctx.globalAlpha = Math.max(0, p.life / p.max);
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    drawFish(fish, t);
+    ctx.restore();
+  }
+
+  // ---------- menu scene (so the first frame is alive) ----------
+  function menuScene(dt, t) {
+    fish.tx = W / 2 + Math.sin(t * 0.8) * W * 0.25;
+    fish.x += (fish.tx - fish.x) * Math.min(1, dt * 3);
+    fish.vx = Math.cos(t * 0.8) * W * 0.2;
+    fish.wag += dt * 8;
+    fish.y = H * 0.78;
+  }
+
+  // ---------- flow ----------
+  function startGame() {
+    initAudio();
+    try { audio && audio.resume(); } catch (e) {}
+    reset();
+    state = 'play';
+    ui.start.hidden = true; ui.over.hidden = true; ui.paused.hidden = true;
+    ui.hud.hidden = false;
+    blip(440, 0.15, 'triangle', 0.06, 1.5);
+  }
+  function gameOver() {
+    state = 'over';
+    shake = 0.35;
+    burst(fish.x, fish.y, C.coral, 20);
+    blip(220, 0.5, 'sawtooth', 0.06, 0.4);
+    buzz([80, 40, 120]);
+    const sc = score();
+    const isNew = sc > best;
+    if (isNew) { best = sc; saveBest(best); }
+    ui.finalScore.textContent = sc;
+    ui.finalDetail.textContent = `${Math.floor(meters)} m · ${pearlCount} ${pearlCount === 1 ? 'biser' : 'bisera'}`;
+    ui.finalBest.innerHTML = isNew ? '<span class="best-new">Novi rekord!</span>' : `Rekord: ${best}`;
+    ui.hud.hidden = true;
+    setTimeout(() => { if (state === 'over') ui.over.hidden = false; }, 600);
+  }
+  function pause() {
+    if (state !== 'play') return;
+    state = 'paused';
+    ui.paused.hidden = false;
+  }
+  function resume() {
+    if (state !== 'paused') return;
+    state = 'play';
+    ui.paused.hidden = true;
+    last = performance.now();
+  }
+
+  $('playBtn').addEventListener('click', startGame);
+  $('againBtn').addEventListener('click', startGame);
+  $('pause').addEventListener('click', pause);
+  $('resumeBtn').addEventListener('click', resume);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+
+  // ---------- input ----------
+  function pointerX(e) { const r = canvas.getBoundingClientRect(); return e.clientX - r.left; }
+  canvas.addEventListener('pointerdown', e => {
+    if (state === 'play') fish.tx = pointerX(e);
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (state !== 'play') return;
+    if (e.pointerType === 'mouse' || e.buttons || e.pressure > 0) fish.tx = pointerX(e);
+  });
+  const keys = {};
+  window.addEventListener('keydown', e => {
+    keys[e.key] = true;
+    if ((e.key === ' ' || e.key === 'Enter') && (state === 'menu' || state === 'over') && !ui.start.contains(document.activeElement) && !ui.over.contains(document.activeElement)) startGame();
+    if (e.key === 'Escape' || e.key === 'p') state === 'play' ? pause() : resume();
+  });
+  window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 1 / 30);
+    last = now;
+    const t = now / 1000;
+    if (state === 'play') {
+      const k = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
+      if (k) fish.tx = fish.x + k * 420 * S * dt * 3;
+      update(dt);
+    } else if (state === 'menu') {
+      menuScene(dt, t);
+    } else if (state === 'over') {
+      for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; }
+      particles = particles.filter(p => p.life > 0);
+      if (shake > 0) shake -= dt;
+    }
+    draw(t);
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('resize', () => { resize(); makeSnow(); });
+  resize();
+  reset();
+  makeSnow();
+  // a few sample creatures on the menu screen
+  things.push({ kind: 'jelly', x: W * 0.25, y: H * 0.22, r: 24 * S, phase: 0, drift: 0 });
+  things.push({ kind: 'pearl', x: W * 0.72, y: H * 0.3, r: 9 * S, phase: 1 });
+  things.push({ kind: 'pearl', x: W * 0.8, y: H * 0.36, r: 9 * S, phase: 2 });
+  requestAnimationFrame(frame);
+})();
+</script>
