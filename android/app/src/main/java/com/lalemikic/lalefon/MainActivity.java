@@ -1,4 +1,4 @@
-package com.lalemikic.zmijica;
+package com.lalemikic.lalefon;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -51,12 +51,12 @@ public class MainActivity extends Activity {
         web.onResume();
     }
 
-    /** Back acts like the game's C key; from the main menu it closes the app. */
+    /** Back acts like the game's C key; from the standby screen it closes the app. */
     @Override
     @SuppressWarnings("deprecation")
     public void onBackPressed() {
         web.evaluateJavascript(
-                "(function(){return !!(window.__zmijicaBack && window.__zmijicaBack());})()",
+                "(function(){return !!(window.__lalefonBack && window.__lalefonBack());})()",
                 handled -> {
                     if (!"true".equals(handled)) finish();
                 });

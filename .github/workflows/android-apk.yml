@@ -3,7 +3,7 @@ name: Android APK
 on:
   push:
     paths:
-      - "zmijica/**"
+      - "lalefon/**"
       - "android/**"
       - ".github/workflows/android-apk.yml"
   workflow_dispatch:
@@ -26,14 +26,14 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Put the game into the app
+      - name: Put the phone into the app
         run: |
           mkdir -p android/app/src/main/assets
           {
             echo '<!doctype html><html lang="sr"><head><meta charset="utf-8">'
             echo '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
             echo '</head><body>'
-            cat zmijica/index.html
+            cat lalefon/index.html
             echo '</body></html>'
           } > android/app/src/main/assets/index.html
 
@@ -41,19 +41,19 @@ jobs:
         run: gradle -p android assembleDebug --no-daemon
 
       - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk Zmijica.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Lalefon.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Zmijica-apk
-          path: Zmijica.apk
+          name: Lalefon-apk
+          path: Lalefon.apk
 
-      - name: Publish as the "zmijica-apk" release
+      - name: Publish as the "lalefon-apk" release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete zmijica-apk --yes --cleanup-tag || true
-          gh release create zmijica-apk Zmijica.apk \
+          gh release delete lalefon-apk --yes --cleanup-tag || true
+          gh release create lalefon-apk Lalefon.apk \
             --target "$GITHUB_SHA" \
-            --title "Zmijica (Android APK)" \
-            --notes "Automatski napravljeno iz grane ${GITHUB_REF_NAME}, commit ${GITHUB_SHA::7}. Preuzmi Zmijica.apk na telefonu i instaliraj ga."
+            --title "Lalefon (Android APK)" \
+            --notes "Automatski napravljeno iz grane ${GITHUB_REF_NAME}, commit ${GITHUB_SHA::7}. Preuzmi Lalefon.apk na telefonu i instaliraj ga."

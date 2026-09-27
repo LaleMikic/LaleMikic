@@ -1,5 +1,5 @@
 .gradle/
 build/
 local.properties
-# generated from zmijica/index.html by the build workflow
+# generated from lalefon/index.html by the build workflow
 app/src/main/assets/index.html

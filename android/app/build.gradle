@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace "com.lalemikic.zmijica"
+    namespace "com.lalemikic.lalefon"
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.lalemikic.zmijica"
+        applicationId "com.lalemikic.lalefon"
         minSdk 24
         targetSdk 34
         versionCode((System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger())

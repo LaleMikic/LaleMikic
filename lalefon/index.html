@@ -1,0 +1,1450 @@
+<title>Lalefon</title>
+<meta name="theme-color" content="#121419">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --page: #121419;
+    --body-hi: #3A5078;
+    --body: #22314F;
+    --body-lo: #16213A;
+    --bezel: #0D1424;
+    --lcd: #AFC48A;
+    --lcd-hi: #C3D59C;
+    --key-hi: #E6EAF0;
+    --key-lo: #B6BFCD;
+    --key-ink: #1E2B45;
+    --label: #C9D3E6;
+    --ui: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--label);
+    font-family: var(--ui);
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  #wrap {
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-block: 12px;
+    padding-inline: 16px;
+  }
+  .phone {
+    width: 100%;
+    max-width: 380px;
+    height: 100%;
+    max-height: 820px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 16px 22px;
+    border-radius: 48px 48px 72px 72px / 40px 40px 90px 90px;
+    background: linear-gradient(160deg, var(--body-hi), var(--body) 45%, var(--body-lo));
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, .16),
+      inset 0 -8px 16px rgba(0, 0, 0, .35),
+      0 24px 48px rgba(0, 0, 0, .55);
+  }
+  .brand {
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: .35em;
+    padding-left: .35em;
+    opacity: .85;
+  }
+  .bezel {
+    background: var(--bezel);
+    border-radius: 20px 20px 28px 28px;
+    padding: 12px;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, .6);
+  }
+  .lcd {
+    border-radius: 6px;
+    background: radial-gradient(ellipse at 40% 30%, var(--lcd-hi), var(--lcd) 70%);
+    box-shadow: inset 0 0 12px rgba(0, 0, 0, .3);
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    aspect-ratio: 84 / 48;
+    touch-action: none;
+  }
+  .navi {
+    display: grid;
+    grid-template-columns: 1fr 1.7fr 1fr;
+    gap: 12px;
+    height: 56px;
+    flex: none;
+  }
+  .keypad {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, minmax(38px, 1fr));
+    gap: 10px 16px;
+  }
+  button {
+    font-family: var(--ui);
+    border: 0;
+    cursor: pointer;
+    touch-action: none;
+    color: var(--key-ink);
+  }
+  button:focus-visible { outline: 3px solid #8FB3FF; outline-offset: 2px; }
+  .key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--key-hi), var(--key-lo));
+    box-shadow: 0 3px 0 #7C879B, 0 5px 8px rgba(0, 0, 0, .35);
+    transition: transform .05s, box-shadow .05s, filter .05s;
+  }
+  .key b { font-size: 22px; font-weight: 700; line-height: 1; }
+  .key small { font-size: 11px; font-weight: 500; letter-spacing: .04em; opacity: .7; }
+  .key.down, .key:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #7C879B, 0 2px 4px rgba(0, 0, 0, .35);
+    filter: brightness(.93);
+  }
+  .key.ok {
+    border-radius: 18px 18px 28px 28px;
+    background: linear-gradient(180deg, #5C6F95, #34466A);
+    color: #E6EAF0;
+    box-shadow: 0 3px 0 #1A2440, 0 5px 8px rgba(0, 0, 0, .35);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .12em;
+  }
+  .key.c b { font-size: 20px; }
+  .rocker { display: grid; grid-template-rows: 1fr 1fr; gap: 3px; }
+  .rocker .key { border-radius: 16px 16px 6px 6px; font-size: 12px; }
+  .rocker .key + .key { border-radius: 6px 6px 16px 16px; }
+  @media (max-height: 620px) {
+    .brand { display: none; }
+    .phone { gap: 10px; padding-top: 12px; }
+    .navi { height: 46px; }
+    .key b { font-size: 18px; }
+  }
+</style>
+
+<div id="wrap">
+  <div class="phone">
+    <div class="brand">LALEFON</div>
+    <div class="bezel">
+      <div class="lcd" id="lcdBox"><canvas id="lcd" aria-label="Ekran telefona"></canvas></div>
+    </div>
+    <div class="navi">
+      <button class="key c" data-k="c" aria-label="C, nazad (drzi za izlaz)"><b>C</b></button>
+      <button class="key ok" data-k="ok" aria-label="Navi taster">OK</button>
+      <div class="rocker">
+        <button class="key" data-k="up" aria-label="Gore">▲</button>
+        <button class="key" data-k="down" aria-label="Dole">▼</button>
+      </div>
+    </div>
+    <div class="keypad">
+      <button class="key" data-k="1"><b>1</b><small>.,?</small></button>
+      <button class="key" data-k="2"><b>2</b><small>abc</small></button>
+      <button class="key" data-k="3"><b>3</b><small>def</small></button>
+      <button class="key" data-k="4"><b>4</b><small>ghi</small></button>
+      <button class="key" data-k="5"><b>5</b><small>jkl</small></button>
+      <button class="key" data-k="6"><b>6</b><small>mno</small></button>
+      <button class="key" data-k="7"><b>7</b><small>pqrs</small></button>
+      <button class="key" data-k="8"><b>8</b><small>tuv</small></button>
+      <button class="key" data-k="9"><b>9</b><small>wxyz</small></button>
+      <button class="key" data-k="*"><b>*</b><small>+</small></button>
+      <button class="key" data-k="0"><b>0</b><small>⎵</small></button>
+      <button class="key" data-k="#"><b>#</b><small>⇧</small></button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ======================================================================
+  //  LCD: 84 x 48 pixels, drawn into a framebuffer and scaled up
+  // ======================================================================
+  const LW = 84, LH = 48;
+  const fb = new Uint8Array(LW * LH);
+  const canvas = document.getElementById('lcd');
+  const lcdBox = document.getElementById('lcdBox');
+  const ctx = canvas.getContext('2d');
+  const THEMES = {
+    ZELENI: { bg: '#AFC48A', hi: '#C3D59C', ink: '#1F2A16', ghost: 'rgba(31,42,22,0.07)' },
+    SIVI:   { bg: '#B7BCB2', hi: '#CBCFC6', ink: '#1C1E1A', ghost: 'rgba(28,30,26,0.07)' },
+    PLAVI:  { bg: '#8DBBDD', hi: '#A8CEEB', ink: '#0D2136', ghost: 'rgba(13,33,54,0.08)' },
+  };
+  let theme = THEMES.ZELENI;
+  let ghost = null, P = 1, PS = 1, OX = 0, OY = 0;
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const r = canvas.getBoundingClientRect();
+    canvas.width = Math.max(84, Math.round(r.width * dpr));
+    canvas.height = Math.max(48, Math.round(r.height * dpr));
+    P = Math.max(1, Math.floor(Math.min(canvas.width / LW, canvas.height / LH)));
+    PS = P > 3 ? P - Math.max(1, Math.round(P * 0.12)) : P;
+    OX = Math.floor((canvas.width - P * LW) / 2);
+    OY = Math.floor((canvas.height - P * LH) / 2);
+    ghost = document.createElement('canvas');
+    ghost.width = canvas.width; ghost.height = canvas.height;
+    const g = ghost.getContext('2d');
+    g.fillStyle = theme.ghost;
+    for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++) g.fillRect(OX + x * P, OY + y * P, PS, PS);
+  }
+  function applyTheme(name) {
+    theme = THEMES[name] || THEMES.ZELENI;
+    lcdBox.style.setProperty('--lcd', theme.bg);
+    lcdBox.style.setProperty('--lcd-hi', theme.hi);
+    resize();
+  }
+  function present() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(ghost, 0, 0);
+    ctx.fillStyle = theme.ink;
+    for (let y = 0; y < LH; y++) {
+      const row = y * LW;
+      for (let x = 0; x < LW; x++) if (fb[row + x]) ctx.fillRect(OX + x * P, OY + y * P, PS, PS);
+    }
+  }
+
+  const cls = () => fb.fill(0);
+  function px(x, y, v = 1) { x |= 0; y |= 0; if (x >= 0 && x < LW && y >= 0 && y < LH) fb[y * LW + x] = v; }
+  function rect(x, y, w, h, v = 1) { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) px(x + i, y + j, v); }
+  function frame(x, y, w, h, v = 1) { rect(x, y, w, 1, v); rect(x, y + h - 1, w, 1, v); rect(x, y, 1, h, v); rect(x + w - 1, y, 1, h, v); }
+  function spr(rows, x, y, v = 1) {
+    x = Math.round(x); y = Math.round(y);
+    for (let j = 0; j < rows.length; j++) for (let i = 0; i < rows[j].length; i++) if (rows[j][i] === '1') px(x + i, y + j, v);
+  }
+
+  // ---------- 3x5 pixel font ----------
+  const FONT = {
+    A:'010101111101101', B:'110101110101110', C:'011100100100011', D:'110101101101110',
+    E:'111100110100111', F:'111100110100100', G:'011100101101011', H:'101101111101101',
+    I:'111010010010111', J:'001001001101010', K:'101101110101101', L:'100100100100111',
+    M:'101111111101101', N:'110101101101101', O:'010101101101010', P:'110101110100100',
+    Q:'010101101110011', R:'110101110101101', S:'011100010001110', T:'111010010010010',
+    U:'101101101101111', V:'101101101101010', W:'101101111111101', X:'101101010101101',
+    Y:'101101010010010', Z:'111001010100111',
+    0:'111101101101111', 1:'010110010010111', 2:'110001010100111', 3:'110001010001110',
+    4:'101101111001001', 5:'111100110001110', 6:'011100111101111', 7:'111001010010010',
+    8:'111101111101111', 9:'111101111001110',
+    ' ':'000000000000000', '!':'010010010000010', ':':'000010000010000', '.':'000000000000010',
+    '-':'000000111000000', '=':'000111000111000', '<':'001010100010001', '>':'100010001010100',
+    '+':'000010111010000', '*':'000101010101000', '/':'001001010100100', '#':'101111101111101',
+    ',':'000000000010100', '?':'110001010000010', '(':'010100100100010', ')':'010001001001010',
+    "'":'010010000000000', '%':'101001010100101',
+  };
+  const textW = (s, k = 1) => Math.max(0, (String(s).length * 4 - 1) * k);
+  function text(s, x, y, k = 1, v = 1) {
+    s = String(s).toUpperCase();
+    for (let n = 0; n < s.length; n++) {
+      const g = FONT[s[n]] || FONT[' '];
+      for (let i = 0; i < 15; i++) if (g[i] === '1') rect(x + n * 4 * k + (i % 3) * k, y + Math.floor(i / 3) * k, k, k, v);
+    }
+  }
+  const center = (s, y, k = 1, v = 1) => text(s, Math.floor((LW - textW(s, k)) / 2), y, k, v);
+  const right = (s, y, k = 1, v = 1) => text(s, LW - 1 - textW(s, k), y, k, v);
+  const soft = label => center(label, 43);
+  function header(title, extra) {
+    text(title, 1, 0);
+    if (extra != null) right(extra, 0);
+    rect(0, 6, LW, 1);
+  }
+  function box(lines) {
+    const h = lines.length * 7 + 5, y0 = Math.floor((LH - h) / 2);
+    rect(6, y0, 72, h, 0); frame(6, y0, 72, h);
+    lines.forEach((l, i) => center(l, y0 + 3 + i * 7));
+  }
+  function wrap(str, n = 21) {
+    const out = [];
+    str.split('\n').forEach(par => {
+      let line = '';
+      par.split(' ').forEach(w => {
+        if (!line) line = w;
+        else if ((line + ' ' + w).length <= n) line += ' ' + w;
+        else { out.push(line); line = w; }
+      });
+      out.push(line);
+    });
+    return out;
+  }
+  const pad = (n, w) => String(Math.max(0, Math.floor(n))).padStart(w, '0');
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  // ======================================================================
+  //  Settings, records and melodies (saved on this device)
+  // ======================================================================
+  const STORE = 'lalefon-v1';
+  const DEFAULT_MELODIES = [
+    { name: 'MOJA 1', tempo: 125, notes: '' },
+    { name: 'MOJA 2', tempo: 125, notes: '' },
+    { name: 'MOJA 3', tempo: 125, notes: '' },
+    { name: 'TETRIS', tempo: 160, notes: '4e2 8h1 8c2 4d2 8c2 8h1 4a1 8a1 8c2 4e2 8d2 8c2 4h1 8h1 8c2 4d2 4e2 4c2 4a1 4a1 4- 4d2 8f2 4a2 8g2 8f2 4e2 8c2 4e2 8d2 8c2 4h1 8h1 8c2 4d2 4e2 4c2 4a1 4a1' },
+    { name: 'ODA RADOSTI', tempo: 125, notes: '4e1 4e1 4f1 4g1 4g1 4f1 4e1 4d1 4c1 4c1 4d1 4e1 4e1 8d1 2d1 4e1 4e1 4f1 4g1 4g1 4f1 4e1 4d1 4c1 4c1 4d1 4e1 4d1 8c1 2c1' },
+    { name: 'GRAN VALS', tempo: 180, notes: '8e2 8d2 4#f1 4#g1 8#c2 8h1 4d1 4e1 8h1 8a1 4#c1 4e1 2a1' },
+  ];
+  let S = {
+    keyTone: true, vibra: true, screen: 'ZELENI',
+    snake: { level: 3, maze: 0, best: 0 },
+    space: { best: 0 }, pairs: { best: 0 }, mancala: { wins: 0, losses: 0 },
+    mel: DEFAULT_MELODIES.map(m => ({ ...m })),
+  };
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (saved) S = { ...S, ...saved, snake: { ...S.snake, ...saved.snake } };
+    if (!Array.isArray(S.mel) || S.mel.length !== DEFAULT_MELODIES.length) S.mel = DEFAULT_MELODIES.map(m => ({ ...m }));
+  } catch (e) {}
+  function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
+
+  // ======================================================================
+  //  Sound and vibration
+  // ======================================================================
+  let audio = null;
+  function initAudio() {
+    if (audio) { try { if (audio.state === 'suspended') audio.resume(); } catch (e) {} return; }
+    try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; }
+  }
+  function tone(freq, dur, when = 0, vol = 0.05, list) {
+    if (!audio) return;
+    try {
+      const t = audio.currentTime + when;
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = 'square';
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(vol, t);
+      g.gain.setValueAtTime(0, t + dur);
+      o.connect(g).connect(audio.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+      if (list) list.push(o);
+    } catch (e) {}
+  }
+  const sfx = (freq, dur, when = 0) => { if (S.keyTone) tone(freq, dur, when); };
+  const keyTone = () => sfx(1400, 0.035);
+  function buzz(p) { if (!S.vibra) return; try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+
+  // ======================================================================
+  //  Screens and keys
+  // ======================================================================
+  const stack = [];
+  const top = () => stack[stack.length - 1];
+  const push = s => { stack.push(s); s.enter && s.enter(); };
+  const pop = () => { if (stack.length > 1) { const s = stack.pop(); s.leave && s.leave(); } };
+  const home = () => { while (stack.length > 1) pop(); };
+
+  const held = new Set();
+  const DIRKEYS = { U: ['2', 'up'], D: ['8', 'down'], L: ['4', 'left'], R: ['6', 'right'] };
+  const dirOf = k => ({ 2: 'U', up: 'U', 8: 'D', down: 'D', 4: 'L', left: 'L', 6: 'R', right: 'R' })[k] || null;
+  const heldDir = d => DIRKEYS[d].some(k => held.has(k));
+  const isFire = k => k === '5' || k === 'ok';
+
+  let cTimer = null;
+  function press(k, silent) {
+    initAudio();
+    const s = top();
+    if (!silent && !s.quiet) keyTone();
+    held.add(k);
+    if (k === 'c') {
+      clearTimeout(cTimer);
+      cTimer = setTimeout(() => { if (held.has('c')) { const t = top(); t.key && t.key('c-long'); } }, 700);
+    }
+    s.key && s.key(k);
+  }
+  function release(k) {
+    held.delete(k);
+    const s = top();
+    s.release && s.release(k);
+  }
+
+  // ---------- generic list menu ----------
+  function List(title, items, opts = {}) {
+    let idx = 0, first = 0;
+    const ROWS = 5;
+    const label = it => typeof it.label === 'function' ? it.label() : it.label;
+    return {
+      key(k) {
+        const it = items[idx];
+        if (k === 'up' || k === '2') idx = (idx + items.length - 1) % items.length;
+        else if (k === 'down' || k === '8') idx = (idx + 1) % items.length;
+        else if ((k === 'left' || k === '4') && it.adj) { it.adj(-1); save(); }
+        else if ((k === 'right' || k === '6') && it.adj) { it.adj(1); save(); }
+        else if (k === 'ok' || k === '5') {
+          if (it.ok) it.ok(); else if (it.adj) { it.adj(1); save(); }
+        } else if (k === 'c') pop();
+      },
+      tap(lx, ly) {
+        const row = Math.floor((ly - 8) / 7);
+        if (row < 0 || row >= ROWS || first + row >= items.length) return;
+        if (first + row === idx) this.key('ok'); else idx = first + row;
+      },
+      draw() {
+        if (idx < first) first = idx;
+        if (idx >= first + ROWS) first = idx - ROWS + 1;
+        header(title, `${idx + 1}/${items.length}`);
+        for (let r = 0; r < ROWS && first + r < items.length; r++) {
+          const it = items[first + r], y = 9 + r * 7, sel = first + r === idx;
+          if (sel) rect(0, y - 1, LW, 7);
+          text(label(it), 2, y, 1, sel ? 0 : 1);
+          if (it.value) { const v = String(it.value()); text(v, LW - 2 - textW(v), y, 1, sel ? 0 : 1); }
+        }
+        soft(opts.soft || 'IZABERI');
+      },
+    };
+  }
+
+  // ---------- scrolling text (instructions) ----------
+  function TextView(title, body) {
+    const lines = wrap(body.toUpperCase());
+    let first = 0;
+    const ROWS = 5;
+    return {
+      key(k) {
+        if (k === 'up' || k === '2') first = Math.max(0, first - 1);
+        else if (k === 'down' || k === '8') first = Math.min(Math.max(0, lines.length - ROWS), first + 1);
+        else if (k === 'c' || k === 'ok' || k === '5') pop();
+      },
+      draw() {
+        header(title);
+        for (let r = 0; r < ROWS && first + r < lines.length; r++) text(lines[first + r], 1, 9 + r * 7);
+        if (lines.length > ROWS) {
+          const h = Math.max(3, Math.round(34 * ROWS / lines.length));
+          const y = 8 + Math.round((34 - h) * first / (lines.length - ROWS));
+          rect(83, y, 1, h);
+        }
+        soft('NAZAD');
+      },
+    };
+  }
+
+  // ======================================================================
+  //  Standby screen
+  // ======================================================================
+  function Standby() {
+    return {
+      key(k) { if (k === 'ok') push(MainMenu()); },
+      tap() { push(MainMenu()); },
+      draw() {
+        // antenna + signal bars on the left, battery on the right
+        spr(['11111', '01110', '00100', '00100'], 0, 0);
+        spr(['01110', '11111', '11111', '11111'], 79, 0);
+        for (let i = 0; i < 4; i++) {
+          rect(0, 7 + i * 4, 5 - i, 3);
+          rect(LW - 5 + i, 7 + i * 4, 5 - i, 3);
+        }
+        center('LALEFON', 6);
+        const d = new Date();
+        const hh = pad(d.getHours(), 2), mm = pad(d.getMinutes(), 2);
+        center(hh + (d.getSeconds() % 2 ? ':' : ' ') + mm, 16, 2);
+        center(`${pad(d.getDate(), 2)}.${pad(d.getMonth() + 1, 2)}.${d.getFullYear()}`, 31);
+        soft('MENI');
+      },
+    };
+  }
+
+  // ======================================================================
+  //  Main menu: one item per screen with a big icon, like the real thing
+  // ======================================================================
+  const ICONS = {
+    igre(cx, cy) {
+      rect(cx - 11, cy - 5, 22, 10);
+      rect(cx - 11, cy + 5, 6, 4); rect(cx + 5, cy + 5, 6, 4);
+      px(cx - 11, cy - 5, 0); px(cx + 10, cy - 5, 0);
+      rect(cx - 9, cy - 1, 5, 1, 0); rect(cx - 7, cy - 3, 1, 5, 0);
+      rect(cx + 3, cy - 2, 2, 2, 0); rect(cx + 6, cy, 2, 2, 0);
+    },
+    note(cx, cy) {
+      rect(cx - 10, cy + 3, 5, 4); rect(cx + 2, cy + 1, 5, 4);
+      rect(cx - 6, cy - 10, 1, 14); rect(cx + 6, cy - 10, 1, 12);
+      rect(cx - 6, cy - 10, 13, 3);
+    },
+    calc(cx, cy) {
+      frame(cx - 8, cy - 11, 17, 22);
+      rect(cx - 6, cy - 9, 13, 5);
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) rect(cx - 6 + c * 5, cy - 2 + r * 4, 3, 2);
+    },
+    settings(cx, cy) {
+      [4, 12, 7].forEach((k, i) => {
+        const y = cy - 7 + i * 7;
+        rect(cx - 10, y, 21, 1);
+        rect(cx - 10 + k, y - 2, 3, 5);
+      });
+    },
+  };
+  function MainMenu() {
+    const items = [
+      { name: 'IGRE', icon: ICONS.igre, open: GamesMenu },
+      { name: 'KOMPOZITOR', icon: ICONS.note, open: ComposerMenu },
+      { name: 'DODACI', icon: ICONS.calc, open: ExtrasMenu },
+      { name: 'PODESAVANJA', icon: ICONS.settings, open: SettingsMenu },
+    ];
+    let idx = 0;
+    return {
+      key(k) {
+        if (k === 'up' || k === '2') idx = (idx + items.length - 1) % items.length;
+        else if (k === 'down' || k === '8') idx = (idx + 1) % items.length;
+        else if (k === 'ok' || k === '5') push(items[idx].open());
+        else if (k === 'c') pop();
+        else if (/^[1-4]$/.test(k) && k !== '2') { idx = +k - 1; push(items[idx].open()); }
+      },
+      tap() { this.key('ok'); },
+      draw() {
+        const it = items[idx];
+        text(it.name, 1, 0);
+        right(String(idx + 1), 0);
+        it.icon(41, 24);
+        // scroll bar on the right edge
+        rect(82, 8, 1, 32);
+        rect(81, 8 + idx * 8, 3, 8);
+        soft('IZABERI');
+      },
+    };
+  }
+
+  function GamesMenu() {
+    return List('IGRE', [
+      { label: 'ZMIJICA', ok: () => push(SnakeMenu()) },
+      { label: 'SVEMIRSKI NAPAD', ok: () => push(SpaceMenu()) },
+      { label: 'PAROVI', ok: () => push(PairsMenu()) },
+      { label: 'MANKALA', ok: () => push(MancalaMenu()) },
+    ]);
+  }
+  function ExtrasMenu() {
+    return List('DODACI', [
+      { label: 'KALKULATOR', ok: () => push(Calculator()) },
+      { label: 'STOPERICA', ok: () => push(Stopwatch()) },
+    ]);
+  }
+  function SettingsMenu() {
+    const names = Object.keys(THEMES);
+    return List('PODESAVANJA', [
+      { label: 'ZVUK TASTERA', value: () => S.keyTone ? 'DA' : 'NE', adj: () => { S.keyTone = !S.keyTone; } },
+      { label: 'VIBRACIJA', value: () => S.vibra ? 'DA' : 'NE', adj: () => { S.vibra = !S.vibra; buzz(80); } },
+      { label: 'EKRAN', value: () => S.screen, adj: d => {
+        S.screen = names[(names.indexOf(S.screen) + d + names.length) % names.length];
+        applyTheme(S.screen);
+      } },
+    ], { soft: 'PROMENI' });
+  }
+
+  // ======================================================================
+  //  ZMIJICA (snake)
+  // ======================================================================
+  const MAZES = ['NEMA', 'KUTIJA', 'TUNEL'];
+  function SnakeMenu() {
+    return List('ZMIJICA', [
+      { label: 'NOVA IGRA', ok: () => push(SnakeGame()) },
+      { label: 'NIVO', value: () => S.snake.level, adj: d => { S.snake.level = ((S.snake.level - 1 + d + 9) % 9) + 1; } },
+      { label: 'LAVIRINT', value: () => MAZES[S.snake.maze], adj: d => { S.snake.maze = (S.snake.maze + d + 3) % 3; } },
+      { label: 'REKORD', value: () => S.snake.best },
+      { label: 'UPUTSTVO', ok: () => push(TextView('UPUTSTVO',
+        'Vodi zmijicu tasterima 2 4 6 8 ili prevlacenjem prsta po ekranu. Jedi tackice da rastes. Posle svake pete pojavi se bonus zivotinja: uhvati je pre isteka vremena. Ne udaraj u sebe. Nivo odredjuje brzinu. 5 ili OK je pauza.')) },
+    ]);
+  }
+
+  function SnakeGame() {
+    const COLS = 20, ROWS = 10, FX = 2, FY = 7;
+    const level = S.snake.level, maze = S.snake.maze;
+    const wraps = maze !== 1;
+    const walls = new Set();
+    if (maze === 2) for (let x = 3; x <= 16; x++) { walls.add(x + ',2'); walls.add(x + ',7'); }
+    const BONUS = [
+      ['0101010', '1111111', '0101010'],
+      ['0110010', '1111111', '0110010'],
+      ['1000001', '0111110', '1010101'],
+    ];
+    let state, snake, dir, queue, food, bonus, score, eaten, acc, dieT, newBest;
+    const stepMs = 330 - level * 30;
+
+    function reset() {
+      snake = [];
+      for (let i = 0; i < 5; i++) snake.push({ x: 8 - i, y: 5, full: false });
+      dir = { x: 1, y: 0 }; queue = [];
+      score = 0; eaten = 0; bonus = null; acc = 0; newBest = false; food = null;
+      placeFood();
+      state = 'play';
+    }
+    const occupied = (x, y) =>
+      walls.has(x + ',' + y) || snake.some(s => s.x === x && s.y === y) ||
+      (food && food.x === x && food.y === y) ||
+      (bonus && bonus.y === y && (bonus.x === x || bonus.x + 1 === x));
+    function free(w) {
+      const out = [];
+      for (let y = 0; y < ROWS; y++) for (let x = 0; x <= COLS - w; x++) {
+        let ok = true;
+        for (let k = 0; k < w; k++) if (occupied(x + k, y)) ok = false;
+        if (ok) out.push({ x, y });
+      }
+      return out;
+    }
+    function placeFood() { food = null; const f = free(1); food = f.length ? pick(f) : null; }
+    function placeBonus() { const f = free(2); if (f.length) { const c = pick(f); bonus = { ...c, t: 20, sprite: pick(BONUS) }; } }
+
+    function turn(d) {
+      const v = { U: { x: 0, y: -1 }, D: { x: 0, y: 1 }, L: { x: -1, y: 0 }, R: { x: 1, y: 0 } }[d];
+      const last = queue.length ? queue[queue.length - 1] : dir;
+      if ((v.x === last.x && v.y === last.y) || (v.x === -last.x && v.y === -last.y)) return;
+      if (queue.length < 2) queue.push(v);
+    }
+    function die() {
+      state = 'dying'; dieT = 0;
+      sfx(440, 0.12); sfx(330, 0.12, 0.14); sfx(220, 0.3, 0.28);
+      buzz([120, 60, 200]);
+      if (score > S.snake.best) { S.snake.best = score; newBest = true; save(); }
+    }
+    function step() {
+      if (queue.length) dir = queue.shift();
+      const h = snake[0];
+      let nx = h.x + dir.x, ny = h.y + dir.y;
+      if (wraps) { nx = (nx + COLS) % COLS; ny = (ny + ROWS) % ROWS; }
+      else if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return die();
+      if (walls.has(nx + ',' + ny)) return die();
+      const eats = food && food.x === nx && food.y === ny;
+      const body = eats ? snake : snake.slice(0, -1);
+      if (body.some(s => s.x === nx && s.y === ny)) return die();
+      snake.unshift({ x: nx, y: ny, full: eats });
+      if (eats) {
+        score += level; eaten++;
+        sfx(1760, 0.05);
+        placeFood();
+        if (eaten % 5 === 0 && !bonus) placeBonus();
+      } else snake.pop();
+      if (bonus) {
+        if (ny === bonus.y && (nx === bonus.x || nx === bonus.x + 1)) {
+          score += level * 2 + bonus.t; bonus = null;
+          [1320, 1760, 2200].forEach((f, i) => sfx(f, 0.05, i * 0.06));
+        } else if (--bonus.t <= 0) bonus = null;
+      }
+    }
+
+    const cx = x => FX + x * 4, cy = y => FY + y * 4;
+    const adj = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
+    function drawSnake() {
+      for (let i = snake.length - 1; i >= 0; i--) {
+        const s = snake[i], X = cx(s.x), Y = cy(s.y);
+        rect(X, Y, 3, 3);
+        if (i > 0 && !s.full) px(X + 1, Y + 1, 0);
+        const n = snake[i - 1];
+        if (n && adj(s, n)) {
+          if (n.x > s.x) px(X + 3, Y + 1); else if (n.x < s.x) px(X - 1, Y + 1);
+          else if (n.y > s.y) px(X + 1, Y + 3); else px(X + 1, Y - 1);
+        }
+      }
+      const h = snake[0], X = cx(h.x), Y = cy(h.y);
+      if (dir.x) px(X + 1, Y, 0); else px(X, Y + 1, 0);
+      let fx = h.x + dir.x, fy = h.y + dir.y;
+      if (wraps) { fx = (fx + COLS) % COLS; fy = (fy + ROWS) % ROWS; }
+      if (food && food.x === fx && food.y === fy) {
+        if (dir.x === 1) px(X + 2, Y + 1, 0); else if (dir.x === -1) px(X, Y + 1, 0);
+        else if (dir.y === 1) px(X + 1, Y + 2, 0); else px(X + 1, Y, 0);
+      }
+    }
+    function drawField(showSnake) {
+      text(pad(score, 4), 1, 0);
+      if (bonus) { spr(bonus.sprite, 63, 1); text(pad(bonus.t, 2), 76, 0); }
+      frame(1, 6, 82, 42);
+      if (maze === 1) frame(0, 5, 84, 43);
+      walls.forEach(k => { const [x, y] = k.split(',').map(Number); rect(cx(x), cy(y), 4, 4); });
+      if (food) { const X = cx(food.x), Y = cy(food.y); px(X + 1, Y); px(X, Y + 1); px(X + 2, Y + 1); px(X + 1, Y + 2); }
+      if (bonus) spr(bonus.sprite, cx(bonus.x), cy(bonus.y));
+      if (showSnake) drawSnake();
+    }
+
+    reset();
+    return {
+      key(k) {
+        if (state === 'play') {
+          const d = dirOf(k);
+          if (d) turn(d);
+          else if (isFire(k) || k === 'c') state = 'paused';
+        } else if (state === 'paused') {
+          if (isFire(k)) state = 'play'; else if (k === 'c') pop();
+        } else if (state === 'over') {
+          if (isFire(k)) reset(); else if (k === 'c') pop();
+        }
+      },
+      tick(dt) {
+        if (state === 'play') {
+          acc += dt * 1000;
+          while (acc >= stepMs && state === 'play') { acc -= stepMs; step(); }
+        } else if (state === 'dying') {
+          dieT += dt;
+          if (dieT > 1.4) state = 'over';
+        }
+      },
+      hidden() { if (state === 'play') state = 'paused'; },
+      draw() {
+        if (state === 'over') {
+          center('KRAJ IGRE!', 1);
+          center('REZULTAT:', 10);
+          center(String(score), 17, 2);
+          center(newBest ? 'NOVI REKORD!' : 'REKORD ' + S.snake.best, 30);
+          center('5 = NOVA  C = NAZAD', 41);
+          return;
+        }
+        drawField(state !== 'dying' || Math.floor(dieT * 6) % 2 === 0);
+        if (state === 'paused') box(['PAUZA', '5 = NASTAVI', 'C = IZLAZ']);
+      },
+    };
+  }
+
+  // ======================================================================
+  //  SVEMIRSKI NAPAD (side-scrolling shooter)
+  // ======================================================================
+  function SpaceMenu() {
+    return List('SVEMIRSKI NAPAD', [
+      { label: 'NOVA IGRA', ok: () => push(SpaceGame()) },
+      { label: 'REKORD', value: () => S.space.best },
+      { label: 'UPUTSTVO', ok: () => push(TextView('UPUTSTVO',
+        'Pomeraj brod tasterima 2 4 6 8 ili vuci prstom preko ekrana. Drzi 5 ili OK za pucanje. Dok vuces prstom, brod puca sam. Kutija daje trostruku vatru. Na kraju svakog nivoa ceka te veliki bos. Imas 3 zivota. C je pauza.')) },
+    ]);
+  }
+
+  function SpaceGame() {
+    const SHIP = ['111000000', '011110000', '011111111', '011110000', '111000000'];
+    const FOES = [
+      ['0011100', '0111110', '1101011', '1111111', '0100010'],
+      ['1000001', '0111110', '1011101', '0111110', '1000001'],
+      ['0001111', '0111100', '1111111', '0111100', '0001111'],
+    ];
+    const BOSS = [
+      '000011111100', '000111111110', '001100111111', '011111111110', '111111100000',
+      '011111111110', '001100111111', '000111111110', '000011111100',
+    ];
+    const BOX = ['11111', '10001', '10101', '10001', '11111'];
+    const TOP = 7, BOTTOM = 47;
+    let st;
+
+    function reset() {
+      st = {
+        phase: 'intro', t: 1.6, ship: { x: 4, y: 24 }, shots: [], eshots: [], foes: [], boxes: [], fx: [],
+        stars: Array.from({ length: 12 }, () => ({ x: rnd(0, 84), y: rnd(TOP, BOTTOM), v: rnd(6, 20) })),
+        score: 0, lives: 3, level: 1, kills: 0, spawn: 1, boss: null, inv: 0, cd: 0, triple: 0,
+        drag: null, paused: false, newBest: false,
+      };
+    }
+    const need = () => 10 + st.level * 4;
+    const hit = (ax, ay, aw, ah, bx, by, bw, bh) => ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    const boom = (x, y) => st.fx.push({ x, y, t: 0 });
+
+    function spawnFoe() {
+      const lf = 1 + (st.level - 1) * 0.2;
+      const kind = Math.floor(Math.random() * 3);
+      const y = rnd(TOP + 2, BOTTOM - 7);
+      st.foes.push({
+        x: 85, y, by: y, s: FOES[kind], w: 7, h: 5, vx: -rnd(14, 22) * lf, hp: st.level > 2 && kind === 1 ? 2 : 1,
+        mode: kind === 0 ? 'line' : 'wave', a: rnd(4, 10), wv: rnd(2, 4), t: rnd(0, 6), cd: rnd(1, 3) / lf,
+      });
+    }
+    function loseLife() {
+      st.lives--; st.inv = 2; st.eshots = [];
+      boom(st.ship.x + 4, st.ship.y + 2);
+      sfx(200, 0.25); buzz(150);
+      if (st.lives <= 0) {
+        st.phase = 'dying'; st.t = 1.2;
+        if (st.score > S.space.best) { S.space.best = st.score; st.newBest = true; save(); }
+      }
+    }
+
+    function update(dt) {
+      const s = st.ship, lf = 1 + (st.level - 1) * 0.2;
+      for (const p of st.stars) { p.x -= p.v * dt; if (p.x < 0) { p.x = 84; p.y = rnd(TOP, BOTTOM); } }
+      st.fx = st.fx.filter(f => (f.t += dt) < 0.35);
+      if (st.phase === 'intro') { st.t -= dt; if (st.t <= 0) st.phase = 'play'; return; }
+      if (st.phase === 'dying') { st.t -= dt; if (st.t <= 0) st.phase = 'over'; return; }
+      if (st.phase !== 'play') return;
+
+      // move the ship: keys, or follow the finger
+      const sp = 42 * dt;
+      if (st.drag) {
+        s.x += Math.max(-sp * 1.5, Math.min(sp * 1.5, st.drag.tx - s.x));
+        s.y += Math.max(-sp * 1.5, Math.min(sp * 1.5, st.drag.ty - s.y));
+      } else {
+        if (heldDir('U')) s.y -= sp;
+        if (heldDir('D')) s.y += sp;
+        if (heldDir('L')) s.x -= sp;
+        if (heldDir('R')) s.x += sp;
+      }
+      s.x = Math.max(0, Math.min(60, s.x));
+      s.y = Math.max(TOP, Math.min(BOTTOM - 5, s.y));
+      if (st.inv > 0) st.inv -= dt;
+      if (st.triple > 0) st.triple -= dt;
+
+      // fire
+      st.cd -= dt;
+      const firing = held.has('5') || held.has('ok') || st.drag;
+      if (firing && st.cd <= 0) {
+        st.cd = 0.26;
+        st.shots.push({ x: s.x + 9, y: s.y + 2, vy: 0 });
+        if (st.triple > 0) { st.shots.push({ x: s.x + 8, y: s.y + 2, vy: -14 }); st.shots.push({ x: s.x + 8, y: s.y + 2, vy: 14 }); }
+        sfx(2000, 0.02);
+      }
+      for (const b of st.shots) { b.x += 70 * dt; b.y += b.vy * dt; }
+      st.shots = st.shots.filter(b => b.x < 84 && b.y > TOP && b.y < BOTTOM && !b.dead);
+      for (const b of st.eshots) { b.x += b.vx * dt; b.y += b.vy * dt; }
+      st.eshots = st.eshots.filter(b => b.x > -3 && b.y > TOP - 2 && b.y < BOTTOM + 2);
+
+      // spawn enemies, then the boss
+      if (!st.boss) {
+        if (st.kills < need()) {
+          st.spawn -= dt;
+          if (st.spawn <= 0) { spawnFoe(); st.spawn = Math.max(0.55, rnd(0.9, 1.7) - st.level * 0.08); }
+        } else if (!st.foes.length) {
+          st.boss = { x: 86, y: 22, w: 12, h: 9, hp: 12 + st.level * 8, max: 12 + st.level * 8, dir: 1, cd: 1.2 };
+          sfx(300, 0.3); sfx(250, 0.4, 0.3);
+        }
+      }
+
+      for (const e of st.foes) {
+        e.t += dt; e.x += e.vx * dt;
+        if (e.mode === 'wave') e.y = Math.max(TOP, Math.min(BOTTOM - e.h, e.by + Math.sin(e.t * e.wv) * e.a));
+        e.cd -= dt;
+        if (e.cd <= 0 && e.x < 80 && e.x > 20) { e.cd = rnd(1.6, 3.4) / lf; st.eshots.push({ x: e.x - 1, y: e.y + 2, vx: -36 * lf, vy: 0 }); }
+      }
+      st.foes = st.foes.filter(e => e.x > -10 && !e.dead);
+
+      const B = st.boss;
+      if (B) {
+        if (B.x > 70) B.x -= 12 * dt;
+        B.y += B.dir * 14 * lf * dt;
+        if (B.y < TOP + 1 || B.y > BOTTOM - B.h - 1) B.dir *= -1;
+        B.cd -= dt;
+        if (B.cd <= 0 && B.x <= 72) {
+          B.cd = Math.max(0.5, 1.2 - st.level * 0.1);
+          const dy = (s.y + 2) - (B.y + 4);
+          [-1, 0, 1].forEach(k => st.eshots.push({ x: B.x - 1, y: B.y + 4, vx: -34 * lf, vy: dy * 0.4 + k * 10 }));
+        }
+      }
+
+      // shots hitting enemies
+      for (const b of st.shots) {
+        for (const e of st.foes) if (!e.dead && hit(b.x, b.y, 3, 1, e.x, e.y, e.w, e.h)) {
+          b.dead = true;
+          if (--e.hp <= 0) {
+            e.dead = true; st.kills++; st.score += 5 * st.level; boom(e.x + 3, e.y + 2); sfx(900, 0.04);
+            if (Math.random() < 0.1) st.boxes.push({ x: e.x, y: e.y });
+          }
+          break;
+        }
+        if (!b.dead && B && hit(b.x, b.y, 3, 1, B.x, B.y, B.w, B.h)) {
+          b.dead = true; B.hp--; sfx(600, 0.02);
+          if (B.hp <= 0) {
+            st.score += 50 * st.level;
+            for (let i = 0; i < 5; i++) boom(B.x + rnd(0, 12), B.y + rnd(0, 9));
+            [880, 1100, 1320, 1760].forEach((f, i) => sfx(f, 0.08, i * 0.09));
+            st.boss = null; st.level++; st.kills = 0; st.eshots = [];
+            st.phase = 'intro'; st.t = 2;
+          }
+        }
+      }
+      st.shots = st.shots.filter(b => !b.dead);
+
+      // pickups
+      for (const p of st.boxes) {
+        p.x -= 16 * dt;
+        if (hit(p.x, p.y, 5, 5, s.x, s.y, 9, 5)) { p.dead = true; st.triple = 10; [1200, 1600].forEach((f, i) => sfx(f, 0.06, i * 0.07)); }
+      }
+      st.boxes = st.boxes.filter(p => p.x > -6 && !p.dead);
+
+      // the ship getting hit
+      if (st.inv <= 0) {
+        const sx = s.x + 1, sy = s.y + 1;
+        if (st.eshots.some(b => hit(b.x, b.y, 2, 1, sx, sy, 7, 3)) ||
+            st.foes.some(e => hit(e.x, e.y, e.w, e.h, sx, sy, 7, 3)) ||
+            (st.boss && hit(st.boss.x, st.boss.y, st.boss.w, st.boss.h, sx, sy, 7, 3))) loseLife();
+      }
+    }
+
+    reset();
+    return {
+      quiet: true,
+      key(k) {
+        if (st.phase === 'over') { if (isFire(k)) reset(); else if (k === 'c') pop(); return; }
+        if (st.paused) { if (isFire(k)) st.paused = false; else if (k === 'c') pop(); return; }
+        if (k === 'c') st.paused = true;
+      },
+      hidden() { if (st.phase !== 'over') st.paused = true; },
+      drag(phase, lx, ly) {
+        if (st.paused || st.phase === 'over') { if (phase === 'end' && st.phase === 'over') reset(); else if (phase === 'end') st.paused = false; return; }
+        if (phase === 'start') st.drag = { fx: lx, fy: ly, sx: st.ship.x, sy: st.ship.y, tx: st.ship.x, ty: st.ship.y };
+        else if (phase === 'move' && st.drag) {
+          st.drag.tx = st.drag.sx + (lx - st.drag.fx) * 1.4;
+          st.drag.ty = st.drag.sy + (ly - st.drag.fy) * 1.4;
+        } else st.drag = null;
+      },
+      tick(dt) { if (!st.paused) update(dt); },
+      draw(t) {
+        if (st.phase === 'over') {
+          center('KRAJ IGRE!', 1);
+          center('REZULTAT:', 10);
+          center(String(st.score), 17, 2);
+          center(st.newBest ? 'NOVI REKORD!' : 'REKORD ' + S.space.best, 30);
+          center('5 = NOVA  C = NAZAD', 41);
+          return;
+        }
+        for (let i = 0; i < st.lives; i++) spr(['101', '111', '010'], 1 + i * 4, 1);
+        if (st.triple > 0 && (st.triple > 2 || Math.floor(t * 6) % 2)) spr(BOX, 15, 0);
+        if (st.boss) { frame(24, 1, 32, 4); rect(25, 2, Math.ceil(30 * st.boss.hp / st.boss.max), 2); }
+        right(pad(st.score, 5), 0);
+        rect(0, 6, LW, 1);
+        for (const p of st.stars) px(p.x, p.y);
+        for (const e of st.foes) spr(e.s, e.x, e.y);
+        if (st.boss) spr(BOSS, st.boss.x, st.boss.y);
+        for (const p of st.boxes) spr(BOX, p.x, p.y);
+        for (const b of st.shots) rect(Math.round(b.x), Math.round(b.y), 3, 1);
+        for (const b of st.eshots) rect(Math.round(b.x), Math.round(b.y), 2, 1);
+        for (const f of st.fx) {
+          const x = Math.round(f.x), y = Math.round(f.y);
+          if (f.t < 0.15) { px(x, y); px(x - 1, y); px(x + 1, y); px(x, y - 1); px(x, y + 1); }
+          else { px(x - 2, y - 2); px(x + 2, y - 2); px(x - 2, y + 2); px(x + 2, y + 2); }
+        }
+        const blink = st.inv > 0 && Math.floor(st.inv * 10) % 2;
+        if (st.phase !== 'dying' && !blink) spr(SHIP, st.ship.x, st.ship.y);
+        if (st.phase === 'intro') box(['NIVO ' + st.level]);
+        if (st.paused) box(['PAUZA', '5 = NASTAVI', 'C = IZLAZ']);
+      },
+    };
+  }
+
+  // ======================================================================
+  //  PAROVI (memory)
+  // ======================================================================
+  const PAIR_ICONS = [
+    ['01100110', '11111111', '11111111', '11111111', '01111110', '00111100', '00011000', '00000000'],
+    ['00011000', '00011000', '11111111', '01111110', '00111100', '01100110', '11000011', '00000000'],
+    ['00001100', '00001110', '00001011', '00001001', '00001000', '01111000', '11111000', '01110000'],
+    ['00111100', '01000010', '10100101', '10000001', '10100101', '10011001', '01000010', '00111100'],
+    ['00010000', '01010100', '00111000', '11111110', '00111000', '01010100', '00010000', '00000000'],
+    ['00011000', '00111100', '00111100', '01111110', '01111110', '11111111', '00011000', '00000000'],
+    ['00011000', '00111100', '01111110', '11111111', '01111110', '00111100', '00011000', '00000000'],
+    ['00000000', '01110000', '10001000', '10001111', '10001101', '01110000', '00000000', '00000000'],
+    ['00011000', '00111100', '01111110', '11111111', '01000010', '01011010', '01011010', '01111110'],
+  ];
+  function PairsMenu() {
+    return List('PAROVI', [
+      { label: 'NOVA IGRA', ok: () => push(PairsGame()) },
+      { label: 'REKORD', value: () => S.pairs.best ? S.pairs.best + ' POTEZA' : '-' },
+      { label: 'UPUTSTVO', ok: () => push(TextView('UPUTSTVO',
+        'Pronadji sve parove slicica. Pomeraj okvir tasterima 2 4 6 8 i otvaraj karte sa 5 ili OK, ili samo tapni kartu na ekranu. Sto manje poteza, to bolje.')) },
+    ]);
+  }
+  function PairsGame() {
+    const COLS = 6, ROWS = 3;
+    let cards, cur, open, moves, lock, won, newBest;
+    function reset() {
+      const ids = [];
+      for (let i = 0; i < 9; i++) ids.push(i, i);
+      for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+      cards = ids.map(id => ({ id, st: 'down' }));
+      cur = 0; open = []; moves = 0; lock = 0; won = false; newBest = false;
+    }
+    function flip() {
+      if (won) { reset(); return; }
+      if (lock > 0) return;
+      const c = cards[cur];
+      if (c.st !== 'down') return;
+      c.st = 'up'; open.push(cur);
+      sfx(1000, 0.03);
+      if (open.length === 2) {
+        moves++;
+        const [a, b] = open;
+        if (cards[a].id === cards[b].id) {
+          cards[a].st = cards[b].st = 'done'; open = [];
+          sfx(1320, 0.05, 0.05); sfx(1760, 0.07, 0.11);
+          if (cards.every(k => k.st === 'done')) {
+            won = true;
+            if (!S.pairs.best || moves < S.pairs.best) { S.pairs.best = moves; newBest = true; save(); }
+          }
+        } else lock = 0.9;
+      }
+    }
+    const pos = i => ({ x: 3 + (i % COLS) * 13, y: 8 + Math.floor(i / COLS) * 13 });
+    reset();
+    return {
+      key(k) {
+        const d = dirOf(k);
+        if (d === 'L') cur = (cur % COLS === 0) ? cur + COLS - 1 : cur - 1;
+        else if (d === 'R') cur = (cur % COLS === COLS - 1) ? cur - COLS + 1 : cur + 1;
+        else if (d === 'U') cur = (cur - COLS + 18) % 18;
+        else if (d === 'D') cur = (cur + COLS) % 18;
+        else if (isFire(k)) flip();
+        else if (k === 'c') pop();
+      },
+      tap(lx, ly) {
+        if (won) { reset(); return; }
+        const c = Math.floor((lx - 3) / 13), r = Math.floor((ly - 8) / 13);
+        if (c >= 0 && c < COLS && r >= 0 && r < ROWS) { cur = r * COLS + c; flip(); }
+      },
+      tick(dt) {
+        if (lock > 0) { lock -= dt; if (lock <= 0) { open.forEach(i => { cards[i].st = 'down'; }); open = []; } }
+      },
+      draw(t) {
+        text('POTEZI ' + moves, 1, 0);
+        right(cards.filter(c => c.st === 'done').length / 2 + '/9', 0);
+        cards.forEach((c, i) => {
+          const { x, y } = pos(i);
+          if (c.st === 'down') {
+            frame(x, y, 12, 12);
+            for (let j = 2; j < 10; j++) for (let k = 2; k < 10; k++) if ((j + k) % 3 === 0) px(x + k, y + j);
+          } else {
+            if (c.st === 'up') frame(x, y, 12, 12);
+            spr(PAIR_ICONS[c.id], x + 2, y + 2);
+          }
+        });
+        if (!won && Math.floor(t * 3) % 2 === 0) { const { x, y } = pos(cur); frame(x - 1, y - 1, 14, 14); }
+        if (won) box(['BRAVO!', moves + ' POTEZA', newBest ? 'NOVI REKORD!' : 'REKORD ' + S.pairs.best]);
+      },
+    };
+  }
+
+  // ======================================================================
+  //  MANKALA (6 pits a side, 4 stones each, you against the phone)
+  // ======================================================================
+  function MancalaMenu() {
+    return List('MANKALA', [
+      { label: 'NOVA IGRA', ok: () => push(MancalaGame()) },
+      { label: 'POBEDE', value: () => S.mancala.wins + ':' + S.mancala.losses },
+      { label: 'UPUTSTVO', ok: () => push(TextView('UPUTSTVO',
+        'Ti si dole, telefon gore. Izaberi rupicu tasterima 4 i 6 (ili je tapni) i pritisni 5. Kamencici se dele jedan po jedan, u smeru suprotnom od kazaljke na satu. Ako poslednji padne u tvoju kucicu desno, igras ponovo. Ako padne u tvoju praznu rupicu, uzimas i sve kamencice preko puta. Kad se jedna strana isprazni, igra je gotova. Pobedjuje ko ima vise u kucici.')) },
+    ]);
+  }
+  function MancalaGame() {
+    let board, show, turn, cur, anim, cpuWait, over, result, msg;
+    const sum = (b, a, z) => { let s = 0; for (let i = a; i <= z; i++) s += b[i]; return s; };
+    function reset() {
+      board = [4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0];
+      show = board.slice(); turn = 0; cur = 0; anim = null; cpuWait = 0; over = false; result = ''; msg = '';
+    }
+    function simulate(b, pit, who) {
+      b = b.slice();
+      let n = b[pit], i = pit;
+      b[pit] = 0;
+      const path = [], skip = who === 0 ? 13 : 6;
+      while (n > 0) { i = (i + 1) % 14; if (i === skip) continue; b[i]++; path.push(i); n--; }
+      const store = who === 0 ? 6 : 13;
+      const extra = i === store;
+      const own = who === 0 ? i <= 5 : i >= 7 && i <= 12;
+      if (own && b[i] === 1 && b[12 - i] > 0) { b[store] += b[12 - i] + 1; b[i] = 0; b[12 - i] = 0; }
+      return { b, path, extra };
+    }
+    function finishIfDone(b) {
+      const a = sum(b, 0, 5), c = sum(b, 7, 12);
+      if (a && c) return false;
+      b[6] += a; b[13] += c;
+      for (let i = 0; i <= 12; i++) if (i !== 6) b[i] = 0;
+      return true;
+    }
+    function play(pit, who) {
+      if (board[pit] === 0) return;
+      const res = simulate(board, pit, who);
+      show = board.slice(); show[pit] = 0;
+      anim = { res, who, i: 0, t: 0 };
+    }
+    function endMove() {
+      const { res, who } = anim;
+      anim = null;
+      board = res.b;
+      if (finishIfDone(board)) {
+        show = board.slice(); over = true;
+        const me = board[6], cpu = board[13];
+        result = me > cpu ? 'POBEDA!' : me < cpu ? 'PORAZ' : 'NERESENO';
+        if (me > cpu) { S.mancala.wins++; [1320, 1760, 2200].forEach((f, i) => sfx(f, 0.08, i * 0.1)); }
+        else if (me < cpu) { S.mancala.losses++; sfx(300, 0.3); }
+        save();
+        return;
+      }
+      show = board.slice();
+      turn = res.extra ? who : 1 - who;
+      msg = res.extra ? (who === 0 ? 'IGRAS PONOVO!' : 'TELEFON OPET') : '';
+      if (turn === 1) cpuWait = 0.9;
+      else if (board[cur] === 0) moveCur(1);
+    }
+    function cpuMove() {
+      let best = -1e9, choice = [];
+      for (let j = 7; j <= 12; j++) {
+        if (!board[j]) continue;
+        const r = simulate(board, j, 1);
+        const score = r.b[13] - r.b[6] + (r.extra ? 2 : 0);
+        if (score > best) { best = score; choice = [j]; } else if (score === best) choice.push(j);
+      }
+      if (choice.length) play(pick(choice), 1);
+    }
+    function moveCur(d) {
+      for (let k = 1; k <= 6; k++) {
+        const c = (cur + d * k + 12) % 6;
+        if (board[c]) { cur = c; return; }
+      }
+    }
+    reset();
+    const pitX = col => 12 + col * 10;
+    function num(n, x, y, w, v) { const s = String(n); text(s, x + Math.floor((w - textW(s)) / 2), y, 1, v); }
+    return {
+      key(k) {
+        if (over) { if (isFire(k)) reset(); else if (k === 'c') pop(); return; }
+        if (k === 'c') { pop(); return; }
+        if (turn !== 0 || anim) return;
+        const d = dirOf(k);
+        if (d === 'L') moveCur(-1);
+        else if (d === 'R') moveCur(1);
+        else if (isFire(k)) { msg = ''; play(cur, 0); }
+      },
+      tap(lx, ly) {
+        if (over) { reset(); return; }
+        if (turn !== 0 || anim) return;
+        const col = Math.floor((lx - 12) / 10);
+        if (ly >= 26 && ly <= 40 && col >= 0 && col < 6 && board[col]) { cur = col; msg = ''; play(col, 0); }
+      },
+      tick(dt) {
+        if (anim) {
+          anim.t += dt;
+          while (anim && anim.t >= 0.14) {
+            anim.t -= 0.14;
+            if (anim.i < anim.res.path.length) { show[anim.res.path[anim.i++]]++; sfx(1500, 0.015); }
+            else endMove();
+          }
+        } else if (!over && turn === 1) {
+          cpuWait -= dt;
+          if (cpuWait <= 0) cpuMove();
+        }
+      },
+      draw() {
+        center('MANKALA', 0);
+        rect(0, 6, LW, 1);
+        // stores: phone on the left, you on the right
+        frame(1, 11, 11, 30); num(show[13], 1, 23, 11);
+        frame(72, 11, 11, 30); num(show[6], 72, 23, 11);
+        for (let col = 0; col < 6; col++) {
+          const x = pitX(col);
+          frame(x, 11, 11, 12); num(show[12 - col], x, 14, 11);
+          const sel = turn === 0 && !anim && !over && col === cur;
+          if (sel) rect(x, 29, 11, 12); else frame(x, 29, 11, 12);
+          num(show[col], x, 32, 11, sel ? 0 : 1);
+        }
+        const status = over ? `${result} ${board[6]}:${board[13]}` : anim ? '' : msg || (turn === 0 ? 'TVOJ RED' : 'TELEFON RAZMISLJA');
+        center(status, 43);
+      },
+    };
+  }
+
+  // ======================================================================
+  //  KOMPOZITOR (ringtone composer)
+  // ======================================================================
+  const NOTE_KEYS = { 1: 'c', 2: 'd', 3: 'e', 4: 'f', 5: 'g', 6: 'a', 7: 'h' };
+  const SEMI = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, h: 11 };
+  const TEMPOS = [63, 80, 100, 125, 160, 180, 200, 250];
+  const tok = n => n.n === '-' ? `${n.d}-` : `${n.d}${n.s ? '#' : ''}${n.n}${n.o}`;
+  function parseNotes(str) {
+    return str.trim().split(/\s+/).filter(Boolean).map(t => {
+      const m = /^(\d+)(#?)([a-h-])(\d?)$/i.exec(t);
+      return m ? { d: +m[1], s: !!m[2], n: m[3].toLowerCase(), o: +m[4] || 1 } : null;
+    }).filter(Boolean);
+  }
+  const freqOf = n => 523.25 * Math.pow(2, (n.o - 1) + (SEMI[n.n] + (n.s ? 1 : 0)) / 12);
+
+  function ComposerMenu() {
+    const items = S.mel.map((m, i) => ({ label: m.name, value: () => parseNotes(S.mel[i].notes).length || '', ok: () => push(Editor(i)) }));
+    items.push({ label: 'UPUTSTVO', ok: () => push(TextView('UPUTSTVO',
+      'Tasteri 1 do 7 su note do re mi fa sol la si (C D E F G A H). 0 je pauza. 8 skracuje, a 9 produzava poslednju notu. * menja oktavu, # dodaje povisilicu. C brise notu, a drzanje C izlazi. Strelice pomeraju kursor. OK otvara opcije: sviraj, tempo, brisanje. Najvise 50 nota.')) });
+    return List('KOMPOZITOR', items);
+  }
+
+  function Editor(slot) {
+    const m = S.mel[slot];
+    let notes = parseNotes(m.notes);
+    let cur = notes.length, dur = 4, oct = 1, first = 0, playing = null;
+    const persist = () => { m.notes = notes.map(tok).join(' '); save(); };
+    const preview = n => { if (n && n.n !== '-') tone(freqOf(n), 0.16, 0, 0.05); };
+    function play() {
+      if (!notes.length) return;
+      initAudio();
+      const q = 60 / m.tempo, times = [], oscs = [];
+      let t = 0;
+      notes.forEach(n => {
+        const d = q * 4 / n.d;
+        times.push(t);
+        if (n.n !== '-') tone(freqOf(n), d * 0.9, t + 0.05, 0.06, oscs);
+        t += d;
+      });
+      playing = { start: performance.now() + 50, times, total: t, oscs, idx: 0 };
+    }
+    function stop() {
+      if (!playing) return;
+      playing.oscs.forEach(o => { try { o.stop(); } catch (e) {} });
+      playing = null;
+    }
+    function layout() {
+      const pos = [];
+      let line = 0, x = 1;
+      notes.forEach(n => {
+        const w = textW(tok(n));
+        if (x + w > 82 && x > 1) { line++; x = 1; }
+        pos.push({ line, x, w });
+        x += w + 4;
+      });
+      return pos;
+    }
+    function options() {
+      push(List('OPCIJE', [
+        { label: 'SVIRAJ', ok: () => { pop(); play(); } },
+        { label: 'TEMPO', value: () => m.tempo, adj: d => {
+          const i = TEMPOS.indexOf(m.tempo);
+          m.tempo = TEMPOS[((i < 0 ? 3 : i) + d + TEMPOS.length) % TEMPOS.length];
+        } },
+        { label: 'OBRISI SVE', ok: () => { notes = []; cur = 0; persist(); pop(); } },
+        { label: 'IZADJI', ok: () => { pop(); pop(); } },
+      ]));
+    }
+    return {
+      quiet: true,
+      leave: stop,
+      key(k) {
+        if (playing) { stop(); return; }
+        const prev = notes[cur - 1];
+        if (NOTE_KEYS[k] || k === '0') {
+          if (notes.length >= 50) { tone(200, 0.1); return; }
+          const n = { d: dur, s: false, n: k === '0' ? '-' : NOTE_KEYS[k], o: oct };
+          notes.splice(cur++, 0, n); preview(n); persist();
+        } else if (k === '8' && prev) { prev.d = Math.min(32, prev.d * 2); dur = prev.d; preview(prev); persist(); }
+        else if (k === '9' && prev) { prev.d = Math.max(1, prev.d / 2); dur = prev.d; preview(prev); persist(); }
+        else if (k === '*' && prev && prev.n !== '-') { prev.o = prev.o % 3 + 1; oct = prev.o; preview(prev); persist(); }
+        else if (k === '#' && prev && 'cdfga'.includes(prev.n)) { prev.s = !prev.s; preview(prev); persist(); }
+        else if (k === 'up' || k === 'left') cur = Math.max(0, cur - 1);
+        else if (k === 'down' || k === 'right') cur = Math.min(notes.length, cur + 1);
+        else if (k === 'c') { if (cur > 0) { notes.splice(--cur, 1); persist(); } else if (!notes.length) pop(); }
+        else if (k === 'c-long') pop();
+        else if (k === 'ok') options();
+      },
+      tick() {
+        if (!playing) return;
+        const el = (performance.now() - playing.start) / 1000;
+        if (el > playing.total + 0.1) { playing = null; return; }
+        let i = 0;
+        while (i + 1 < playing.times.length && playing.times[i + 1] <= el) i++;
+        playing.idx = i;
+      },
+      draw(t) {
+        header(m.name, `${notes.length}/50`);
+        const pos = layout();
+        let cLine = 0, cX = 1;
+        if (cur < notes.length) { cLine = pos[cur].line; cX = pos[cur].x - 2; }
+        else if (notes.length) { const p = pos[notes.length - 1]; cLine = p.line; cX = p.x + p.w + 1; }
+        const focus = playing ? pos[playing.idx].line : cLine;
+        if (focus < first) first = focus;
+        if (focus > first + 4) first = focus - 4;
+        notes.forEach((n, i) => {
+          const p = pos[i], y = 9 + (p.line - first) * 7;
+          if (p.line < first || p.line > first + 4) return;
+          const hl = playing && playing.idx === i;
+          if (hl) rect(p.x - 1, y - 1, p.w + 2, 7);
+          text(tok(n), p.x, y, 1, hl ? 0 : 1);
+        });
+        if (!notes.length) { center('PRITISNI 1-7', 16); center('ZA PRVU NOTU', 23); }
+        if (!playing && Math.floor(t * 2.5) % 2 === 0 && cLine >= first && cLine <= first + 4) rect(Math.max(0, cX), 8 + (cLine - first) * 7, 1, 7);
+        soft(playing ? 'STOP' : 'OPCIJE');
+      },
+    };
+  }
+
+  // ======================================================================
+  //  KALKULATOR
+  // ======================================================================
+  function Calculator() {
+    const OPS = ['+', '-', 'X', '/'];
+    let disp = '0', acc = null, op = null, fresh = true, choosing = false;
+    const num = () => parseFloat(disp);
+    function fmt(v) {
+      if (!isFinite(v)) return 'GRESKA';
+      let s = String(+v.toPrecision(10));
+      if (s.length > 10) s = v.toExponential(3).toUpperCase().replace('+', '');
+      return s;
+    }
+    function compute() {
+      if (op === null || acc === null) return;
+      const b = num();
+      const r = op === '+' ? acc + b : op === '-' ? acc - b : op === 'X' ? acc * b : acc / b;
+      disp = fmt(r); acc = null; op = null; fresh = true;
+    }
+    return {
+      key(k) {
+        if (/^[0-9]$/.test(k)) {
+          choosing = false;
+          if (fresh) { disp = k; fresh = false; } else if (disp.length < 10) disp = disp === '0' ? k : disp + k;
+        } else if (k === '#') {
+          choosing = false;
+          if (fresh) { disp = '0.'; fresh = false; } else if (!disp.includes('.')) disp += '.';
+        } else if (k === '*') {
+          if (choosing) op = OPS[(OPS.indexOf(op) + 1) % OPS.length];
+          else { if (op !== null && !fresh) compute(); acc = num(); op = '+'; choosing = true; fresh = true; }
+        } else if (k === 'ok') { choosing = false; compute(); }
+        else if (k === 'c') {
+          if (choosing) { choosing = false; op = null; acc = null; }
+          else if (!fresh && disp.length > 1) disp = disp.slice(0, -1);
+          else if (disp !== '0' || op !== null) { disp = '0'; acc = null; op = null; fresh = true; }
+          else pop();
+        } else if (k === 'c-long') pop();
+      },
+      draw() {
+        header('KALKULATOR');
+        if (acc !== null) right(`${fmt(acc)} ${op}`, 10);
+        right(disp, 19, 2);
+        text('* = + - X /', 1, 33);
+        text('# = .', 60, 33);
+        soft('JEDNAKO');
+      },
+    };
+  }
+
+  // ======================================================================
+  //  STOPERICA
+  // ======================================================================
+  function Stopwatch() {
+    let run = false, base = 0, start = 0, laps = [];
+    const el = () => base + (run ? performance.now() - start : 0);
+    const fmt = ms => `${pad(ms / 60000, 2)}:${pad((ms / 1000) % 60, 2)}.${Math.floor(ms / 100) % 10}`;
+    return {
+      key(k) {
+        if (isFire(k)) {
+          if (run) { base = el(); run = false; } else { start = performance.now(); run = true; }
+        } else if (k === '#' || k === '0') { if (run) { laps.unshift(el()); laps = laps.slice(0, 2); } }
+        else if (k === 'c') { if (!run && el() > 0) { base = 0; laps = []; } else if (!run) pop(); }
+        else if (k === 'c-long') pop();
+      },
+      draw() {
+        header('STOPERICA');
+        center(fmt(el()), 12, 2);
+        laps.forEach((l, i) => text(`KRUG: ${fmt(l)}`, 1, 27 + i * 7));
+        if (!laps.length) center(run ? '# = KRUG' : 'C = NULA', 30);
+        soft(run ? 'STOP' : 'START');
+      },
+    };
+  }
+
+  // ======================================================================
+  //  Input wiring
+  // ======================================================================
+  document.querySelectorAll('button[data-k]').forEach(b => {
+    const k = b.dataset.k;
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      try { b.setPointerCapture(e.pointerId); } catch (err) {}
+      press(k);
+    });
+    const up = () => { if (held.has(k)) release(k); };
+    b.addEventListener('pointerup', up);
+    b.addEventListener('pointercancel', up);
+    b.addEventListener('lostpointercapture', up);
+  });
+
+  const KEYMAP = {
+    ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+    Enter: 'ok', ' ': 'ok', Escape: 'c', Backspace: 'c', '*': '*', '#': '#',
+  };
+  const keyBtn = k => document.querySelector(`button[data-k="${CSS.escape(k)}"]`);
+  window.addEventListener('keydown', e => {
+    const k = /^[0-9]$/.test(e.key) ? e.key : KEYMAP[e.key];
+    if (!k) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    const b = keyBtn(k); if (b) b.classList.add('down');
+    press(k);
+  });
+  window.addEventListener('keyup', e => {
+    const k = /^[0-9]$/.test(e.key) ? e.key : KEYMAP[e.key];
+    if (!k) return;
+    const b = keyBtn(k); if (b) b.classList.remove('down');
+    release(k);
+  });
+
+  // swipe outside the keys = arrows; tap on the screen = OK or a direct pick
+  const lcdXY = e => {
+    const r = canvas.getBoundingClientRect();
+    return [(e.clientX - r.left) / r.width * LW, (e.clientY - r.top) / r.height * LH];
+  };
+  let sw = null;
+  document.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;
+    initAudio();
+    const s = top();
+    if (e.target === canvas && s.drag) {
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+      sw = { drag: true };
+      s.drag('start', ...lcdXY(e));
+      return;
+    }
+    sw = { x: e.clientX, y: e.clientY, done: false };
+  });
+  document.addEventListener('pointermove', e => {
+    if (!sw) return;
+    if (sw.drag) { const s = top(); s.drag && s.drag('move', ...lcdXY(e)); return; }
+    if (sw.done) return;
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+    sw.done = true;
+    const k = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    press(k, true); release(k);
+  });
+  function endPointer(e) {
+    if (!sw) return;
+    const s = top();
+    if (sw.drag) { sw = null; s.drag && s.drag('end'); return; }
+    const tapped = !sw.done;
+    sw = null;
+    if (!tapped || e.target !== canvas) return;
+    initAudio();
+    if (s.tap) s.tap(...lcdXY(e)); else { press('ok', true); release('ok'); }
+  }
+  document.addEventListener('pointerup', endPointer);
+  document.addEventListener('pointercancel', () => { if (sw && sw.drag) { const s = top(); s.drag && s.drag('end'); } sw = null; });
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) return;
+    held.clear();
+    const s = top(); s.hidden && s.hidden();
+  });
+
+  // Android app: the system Back button acts as C; on the standby screen it closes the app
+  window.__lalefonBack = () => {
+    if (stack.length <= 1) return false;
+    press('c', true); release('c');
+    return true;
+  };
+
+  // ======================================================================
+  //  Main loop
+  // ======================================================================
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min((now - last) / 1000, 0.1);
+    last = now;
+    const s = top();
+    s.tick && s.tick(dt, now / 1000);
+    cls();
+    top().draw(now / 1000);
+    present();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', resize);
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
+  applyTheme(S.screen);
+  push(Standby());
+  requestAnimationFrame(loop);
+})();
+</script>
