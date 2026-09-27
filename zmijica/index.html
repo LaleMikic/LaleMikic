@@ -571,6 +571,13 @@
 
   document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'play') state = 'paused'; });
 
+  // Android app: the system Back button acts as C; from the menu it closes the app
+  window.__zmijicaBack = () => {
+    if (state === 'menu') return false;
+    action('back');
+    return true;
+  };
+
   // ================= loop =================
   let last = performance.now();
   function loop(now) {
