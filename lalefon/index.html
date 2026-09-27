@@ -37,25 +37,40 @@
     box-sizing: border-box;
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding-block: 12px;
-    padding-inline: 16px;
   }
+  /* The phone fills the whole device screen; on wide screens it stays phone-sized */
   .phone {
     width: 100%;
-    max-width: 420px;
-    max-height: 100%;
+    max-width: 460px;
+    height: 100%;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 14px 10px 22px;
-    border-radius: 48px 48px 72px 72px / 40px 40px 90px 90px;
+    padding: 14px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    border-radius: 0;
     background: linear-gradient(160deg, var(--body-hi), var(--body) 45%, var(--body-lo));
     box-shadow:
       inset 0 2px 0 rgba(255, 255, 255, .16),
       inset 0 -8px 16px rgba(0, 0, 0, .35),
       0 24px 48px rgba(0, 0, 0, .55);
+  }
+  /* everything above the keys: takes all spare height, screen centred in it */
+  .upper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+  }
+  .speaker {
+    align-self: center;
+    width: 64px;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, .35);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .6), 0 1px 0 rgba(255, 255, 255, .08);
   }
   .brand {
     text-align: center;
@@ -135,7 +150,16 @@
   .rocker { display: grid; grid-template-rows: 1fr 1fr; gap: 3px; }
   .rocker .key { border-radius: 16px 16px 6px 6px; font-size: 12px; }
   .rocker .key + .key { border-radius: 6px 6px 16px 16px; }
+  /* on a phone, the strips behind notches and system bars match the phone body */
+  @media (max-width: 460px) {
+    body { background: var(--body-hi); }
+  }
+  @media (min-width: 461px) {
+    #wrap { align-items: center; padding-block: 12px; padding-inline: 16px; }
+    .phone { border-radius: 48px 48px 72px 72px / 40px 40px 90px 90px; max-height: 900px; }
+  }
   @media (max-height: 620px) {
+    .speaker { display: none; }
     .brand { display: none; }
     .phone { gap: 10px; padding-top: 12px; }
     .navi { height: 46px; }
@@ -145,9 +169,12 @@
 
 <div id="wrap">
   <div class="phone">
-    <div class="brand">LALEFON</div>
-    <div class="bezel">
-      <div class="lcd" id="lcdBox"><canvas id="lcd" aria-label="Phone screen"></canvas></div>
+    <div class="upper">
+      <div class="speaker"></div>
+      <div class="brand">LALEFON</div>
+      <div class="bezel">
+        <div class="lcd" id="lcdBox"><canvas id="lcd" aria-label="Phone screen"></canvas></div>
+      </div>
     </div>
     <div class="navi">
       <button class="key c" data-k="c" aria-label="C, back (hold to exit)"><b>C</b></button>
